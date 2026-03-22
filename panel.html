@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CustomsAI</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--card2:#21253a;--border:#2a2d3e;--green:#00d68f;--blue:#4d7cfe;--orange:#ffaa00;--red:#ff4757;--txt:#e8edf5;--txt2:#8891aa;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Arial,sans-serif}
+body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:28px}
+
+/* LOGO */
+.logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.logo-name{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-0.5px}
+.logo-desc{font-size:12px;color:var(--txt2);margin-top:2px}
+
+/* NAV */
+.nav-btn{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;color:var(--txt2);border-left:3px solid transparent;transition:all .15s;font-size:14px;border:none;background:none;width:100%;text-align:left}
+.nav-btn:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.nav-btn.active{color:var(--green);border-left-color:var(--green);background:rgba(0,214,143,.06)}
+.nav-icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+
+/* STATUS BADGE */
+.status-badge{margin:auto 16px 0;background:var(--card2);border-radius:12px;padding:14px;border:1px solid var(--border)}
+.status-row{display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot.green{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+.dot.orange{background:var(--orange)}
+.dot.red{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-label{font-size:13px;font-weight:500}
+.status-phone{font-size:11px;color:var(--txt2);margin-top:4px;padding-left:17px}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:24px}
+.page-title{font-size:24px;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--txt2)}
+
+/* CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.stat-val{font-size:26px;font-weight:700;margin-bottom:4px}
+.stat-lbl{font-size:12px;color:var(--txt2)}
+.stat-card.green .stat-val{color:var(--green)}
+.stat-card.blue .stat-val{color:var(--blue)}
+.stat-card.orange .stat-val{color:var(--orange)}
+
+/* PANELS */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+.panel-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* FORM */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:6px;font-weight:500;letter-spacing:.3px}
+.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--txt);font-size:14px;padding:11px 14px;outline:none;transition:border .2s;font-family:inherit}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green)}
+.field textarea{resize:vertical;min-height:140px;line-height:1.6}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#00ffaa;transform:translateY(-1px)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{opacity:.85}
+.btn-outline{background:transparent;color:var(--txt);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:rgba(255,71,87,.12);color:var(--red);border:1.5px solid rgba(255,71,87,.3)}
+.btn-danger:hover{background:rgba(255,71,87,.2)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+/* QR */
+.qr-center{text-align:center;padding:10px 0 20px}
+.qr-frame{background:#fff;border-radius:16px;padding:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 30px rgba(0,214,143,.15)}
+.qr-frame img{display:block;width:250px;height:250px}
+.steps{background:var(--card2);border-radius:12px;padding:16px 20px;text-align:left;font-size:13px;color:var(--txt2);line-height:2.2;max-width:400px;margin:0 auto}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--green);color:#000;border-radius:50%;font-size:11px;font-weight:700;margin-right:8px}
+
+/* CONNECTED */
+.connected-box{background:rgba(0,214,143,.06);border:1.5px solid rgba(0,214,143,.2);border-radius:14px;padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.connected-icon{font-size:36px}
+.connected-num{font-size:20px;font-weight:700;color:var(--green)}
+.connected-sub{font-size:13px;color:var(--txt2);margin-top:2px}
+
+/* TABLE */
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;font-size:12px;color:var(--txt2);padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
+.table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+.table tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(0,214,143,.12);color:var(--green)}
+.badge-blue{background:rgba(77,124,254,.12);color:var(--blue)}
+
+/* ALERTS */
+.alert{padding:13px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.alert.show{display:block}
+.alert-ok{background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);color:var(--green)}
+.alert-err{background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);color:var(--red)}
+
+/* SPINNER */
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EDITOR */
+.goods-row{background:var(--card2);border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
+.goods-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.goods-num{font-size:12px;color:var(--txt2);font-weight:600}
+.del-good{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0 4px;opacity:.6}
+.del-good:hover{opacity:1}
+.add-good{background:none;border:2px dashed var(--border);border-radius:10px;color:var(--txt2);padding:12px;width:100%;font-size:14px;cursor:pointer;transition:all .2s;font-family:inherit}
+.add-good:hover{border-color:var(--green);color:var(--green)}
+
+/* MEMORY BAR */
+.mem-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+.mem-fill{height:100%;background:var(--green);border-radius:3px;width:80%}
+.mem-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--txt2)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* KEYWORD PILL */
+.kw-pill{display:inline-block;background:rgba(77,124,254,.12);color:var(--blue);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;margin-left:8px}
+
+@media(max-width:700px){.sidebar{display:none}.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-name">CustomsAI</div>
+      <div class="logo-desc">Таможенные декларации</div>
+    </div>
+
+    <button class="nav-btn active" onclick="showPage('home')"><span class="nav-icon">🏠</span> Главная</button>
+    <button class="nav-btn" onclick="showPage('connect')"><span class="nav-icon">📱</span> Подключение</button>
+    <button class="nav-btn" onclick="showPage('manual')"><span class="nav-icon">✍️</span> Создать вручную</button>
+    <button class="nav-btn" onclick="showPage('tnved')"><span class="nav-icon">🔍</span> Поиск ТН ВЭД</button>
+    <button class="nav-btn" onclick="showPage('history')"><span class="nav-icon">📁</span> История</button>
+    <button class="nav-btn" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Настройки</button>
+
+    <div class="status-badge">
+      <div class="status-row">
+        <div class="dot red" id="s-dot"></div>
+        <div class="status-label" id="s-label">Загрузка...</div>
+      </div>
+      <div class="status-phone" id="s-phone"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="page-header">
+        <div class="page-title">Добро пожаловать 👋</div>
+        <div class="page-sub">Панель управления CustomsAI</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card green"><div class="stat-val" id="h-state">—</div><div class="stat-lbl">Статус WhatsApp</div></div>
+        <div class="stat-card blue"><div class="stat-val" id="h-count">0</div><div class="stat-lbl">Деклараций создано</div></div>
+        <div class="stat-card orange"><div class="stat-val" id="h-kw">—</div><div class="stat-lbl">Кодовое слово</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📋 Быстрый старт</div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="showPage('connect')">📱 Подключить WhatsApp</button>
+          <button class="btn btn-blue" onclick="showPage('manual')">✍️ Создать декларацию</button>
+          <button class="btn btn-outline" onclick="showPage('history')">📁 Посмотреть историю</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🧠 Память контекста</div>
+        <div style="font-size:13px;color:var(--txt2)">ИИ анализирует <strong style="color:var(--txt)">последние 40 сообщений</strong> из чата. Более старые сообщения не видны.</div>
+        <div class="mem-bar"><div class="mem-fill"></div></div>
+        <div class="mem-labels"><span>0</span><span>40 сообщений</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📖 Как это работает</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:2">
+          1. Менеджер общается с клиентом в WhatsApp и собирает все данные<br>
+          2. Когда данные готовы — пишет кодовое слово <strong style="color:var(--green)" id="h-kw2">декларация 777</strong><br>
+          3. Бот автоматически читает переписку и создаёт PDF декларацию<br>
+          4. PDF отправляется клиенту прямо в WhatsApp
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECT -->
+    <div class="page" id="page-connect">
+      <div class="page-header">
+        <div class="page-title">Подключение WhatsApp</div>
+        <div class="page-sub">Сканируйте QR-код чтобы подключить номер</div>
+      </div>
+      <div id="connect-body">Загрузка...</div>
+    </div>
+
+    <!-- MANUAL -->
+    <div class="page" id="page-manual">
+      <div class="page-header">
+        <div class="page-title">Создать декларацию</div>
+        <div class="page-sub">Вставьте переписку или заполните данные вручную</div>
+      </div>
+      <div id="manual-alert" class="alert"></div>
+
+      <!-- EDITOR MODE -->
+      <div id="editor-wrap" style="display:none">
+        <div class="panel">
+          <div class="panel-title">👤 Декларант / Получатель</div>
+          <div class="grid-2">
+            <div class="field"><label>Название компании / ФИО</label><input id="e-name" placeholder="ТОО ALDAU TRADE"></div>
+            <div class="field"><label>БИН / ИИН</label><input id="e-inn" placeholder="241040012345"></div>
+            <div class="field"><label>Адрес в Казахстане</label><input id="e-addr" placeholder="г. Алматы, ул. Сейфуллина 506"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">📤 Отправитель</div>
+          <div class="grid-2">
+            <div class="field"><label>Название отправителя</label><input id="e-exp" placeholder="QINGDAO SUNRISE TRADE CO."></div>
+            <div class="field"><label>Страна отправления</label><input id="e-country" placeholder="Китай"></div>
+            <div class="field"><label>Адрес отправителя</label><input id="e-expaddr" placeholder="г. Циндао, ул. Хайбо 88"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">📦 Логистика</div>
+          <div class="grid-3">
+            <div class="field"><label>Условия поставки</label><input id="e-inco" placeholder="CIP Almaty"></div>
+            <div class="field"><label>Валюта</label><select id="e-cur"><option>USD</option><option>EUR</option><option>CNY</option><option>KZT</option></select></div>
+            <div class="field"><label>Сумма по инвойсу</label><input id="e-total" placeholder="45000"></div>
+            <div class="field"><label>Курс к тенге</label><input id="e-rate" placeholder="492.30"></div>
+            <div class="field"><label>Вид транспорта</label><select id="e-trans"><option value="20">Авто (20)</option><option value="40">Авиа (40)</option><option value="10">Море (10)</option><option value="50">ЖД (50)</option></select></div>
+            <div class="field"><label>Контейнер / ТС</label><input id="e-cont" placeholder="TCKU7821045"></div>
+            <div class="field"><label>Таможенный пост</label><input id="e-border" placeholder="Алтынколь"></div>
+            <div class="field"><label>Вес брутто (кг)</label><input id="e-weight" placeholder="3420"></div>
+            <div class="field"><label>Количество мест</label><input id="e-packs" placeholder="247"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">📄 Документы</div>
+          <div class="grid-2">
+            <div class="field"><label>Номер инвойса</label><input id="e-inv" placeholder="SR-2026-0047"></div>
+            <div class="field"><label>Дата инвойса</label><input id="e-invdate" placeholder="10.02.2026"></div>
+            <div class="field"><label>Номер контракта</label><input id="e-contract" placeholder="KZ-CN-2025-11"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🏷️ Товары</div>
+          <div id="validation-msg" class="validation-box"></div>
+      <div id="goods-list"></div>
+          <button class="add-good" onclick="addGood()">+ Добавить товар</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="generateFromEditor()"><span id="gen-spin" style="display:none" class="spin"></span> 📄 Создать PDF</button>
+          <button class="btn btn-outline" onclick="switchToChat()">← Вернуться к вводу текста</button>
+        </div>
+      </div>
+
+      <!-- CHAT MODE -->
+      <div id="chat-wrap">
+        <div class="panel">
+          <div class="panel-title">💬 Текст переписки</div>
+          <div class="field">
+            <label>Вставьте переписку из WhatsApp</label>
+            <textarea id="chat-text" placeholder="Менеджер: Добрый день! Укажите ваш БИН.&#10;Клиент: ТОО ALDAU TRADE, БИН 241040012345..."></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-green" id="parse-btn" onclick="parseChat()"><span id="parse-spin" style="display:none" class="spin"></span> ⚡ Анализировать и заполнить</button>
+            <button class="btn btn-outline" onclick="switchToEditor()">✏️ Заполнить вручную</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title">История деклараций</div>
+        <div class="page-sub">Все созданные документы</div>
+      </div>
+      <div class="panel">
+        <table class="table">
+          <thead><tr><th>Клиент</th><th>Файл</th><th>Действие</th></tr></thead>
+          <tbody id="hist-body"><tr><td colspan="3" style="text-align:center;color:var(--txt2);padding:20px">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TNVED SEARCH -->
+    <div class="page" id="page-tnved">
+      <div class="page-header">
+        <div class="page-title">Поиск ТН ВЭД</div>
+        <div class="page-sub">Введите название товара — система найдёт точный код на keden.kgd.gov.kz</div>
+      </div>
+      <div class="panel">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label>Наименование товара</label>
+            <input type="text" id="tnved-name" placeholder="Например: полоса алюминиевая для жалюзи">
+          </div>
+          <div>
+            <label>Материал изготовления</label>
+            <input type="text" id="tnved-material" placeholder="Например: алюминий, пластик, хлопок...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="searchTnved()" id="tnved-btn">🔍 Найти код на keden.kgd.gov.kz</button>
+      </div>
+      <div id="tnved-result" style="display:none" class="panel">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div style="font-size:32px;font-weight:700;color:var(--ac);letter-spacing:2px" id="tnved-code">—</div>
+          <div>
+            <div style="font-size:13px;color:var(--txt2)">Код ТН ВЭД ЕАЭС</div>
+            <div style="font-size:12px" id="tnved-conf"></div>
+          </div>
+          <button class="btn btn-secondary" style="margin-left:auto" onclick="copyTnved()">📋 Скопировать</button>
+        </div>
+        <div style="background:var(--s2);border-radius:10px;padding:14px">
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Официальное наименование по ТН ВЭД:</div>
+          <div style="font-size:14px" id="tnved-desc">—</div>
+        </div>
+        <div style="margin-top:12px;background:var(--s2);border-radius:10px;padding:14px">
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Ставка ввозной пошлины (Казахстан):</div>
+          <div style="font-size:14px;color:var(--warn)" id="tnved-duty">—</div>
+        </div>
+        <div style="margin-top:12px;background:var(--s2);border-radius:10px;padding:14px">
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Обоснование классификации:</div>
+          <div style="font-size:13px;color:var(--txt2);line-height:1.6" id="tnved-reason">—</div>
+        </div>
+        <div style="margin-top:12px;background:var(--s2);border-radius:10px;padding:14px">
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">НДС при ввозе (Казахстан):</div>
+          <div style="font-size:14px" id="tnved-vat">12%</div>
+        </div>
+        <div style="margin-top:12px;background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:12px;font-size:12px;color:var(--ac)">
+          ✅ Данные берутся только с официального источника: keden.kgd.gov.kz (КГД МФ РК)
+        </div>
+        <div id="tnved-all" style="display:none;margin-top:16px"></div>
+        <div style="margin-top:10px;font-size:11px;color:var(--txt2)">
+          Дополнительная проверка: <a href="https://keden.kz/tnved" target="_blank" style="color:var(--ac)">keden.kz</a> · <a href="https://tnved.bi.kz" target="_blank" style="color:var(--ac)">tnved.bi.kz</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Настройки</div>
+        <div class="page-sub">Управление параметрами бота</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔑 Кодовое слово</div>
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:16px">Менеджер пишет это слово в чате → бот создаёт декларацию автоматически</div>
+        <div class="grid-2">
+          <div class="field"><label>Новое кодовое слово</label><input id="kw-input" placeholder="декларация 777"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-green" onclick="saveKw()" style="width:100%">💾 Сохранить</button></div>
+        </div>
+        <div id="kw-msg" style="margin-top:8px;font-size:13px"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🧠 Память контекста</div>
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:16px">Сколько последних сообщений из чата читает система при создании декларации</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Количество сообщений</label>
+            <select id="limit-select" onchange="saveLimit()">
+              <option value="20">20 сообщений — быстро</option>
+              <option value="40" selected>40 сообщений — рекомендуется</option>
+              <option value="60">60 сообщений — подробнее</option>
+              <option value="100">100 сообщений — максимум</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <div id="limit-msg" style="font-size:13px;padding-bottom:4px"></div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;font-size:13px;color:var(--txt2)">
+          💡 Больше сообщений = точнее данные, но медленнее обработка. 40 — оптимально для большинства чатов.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔌 WhatsApp</div>
+        <button class="btn btn-danger" onclick="disconnectWA()">Отключить и сменить номер</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var goodsCount = 0;
+var currentPage = 'home';
+
+function showPage(name) {
+  currentPage = name;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active')});
+  var pg = document.getElementById('page-'+name);
+  if (pg) pg.classList.add('active');
+  var btns = document.querySelectorAll('.nav-btn');
+  var map = {home:0,connect:1,manual:2,tnved:3,history:4,settings:5};
+  if (map[name]!==undefined) btns[map[name]].classList.add('active');
+  if (name==='connect') renderConnect();
+  if (name==='history') loadHistory();
+  if (name==='tnved') { document.getElementById('tnved-result') && (document.getElementById('tnved-result').style.display='none'); }
+  if (name==='settings') loadSettings();
+}
+
+// STATUS
+function loadStatus() {
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    var dot = document.getElementById('s-dot');
+    var lbl = document.getElementById('s-label');
+    var phone = document.getElementById('s-phone');
+    var map = {disconnected:['red','Отключён'],qr:['orange','Ожидает QR'],connected:['green','Подключён']};
+    var st = map[d.state]||['red','Неизвестно'];
+    dot.className = 'dot ' + st[0];
+    lbl.textContent = st[1];
+    phone.textContent = d.phone || '';
+
+    var hState = document.getElementById('h-state');
+    var hCount = document.getElementById('h-count');
+    var hKw = document.getElementById('h-kw');
+    var hKw2 = document.getElementById('h-kw2');
+    if (hState) hState.textContent = st[1];
+    if (hCount) hCount.textContent = d.stats || 0;
+    if (hKw) hKw.textContent = d.keyword || '—';
+    if (hKw2) hKw2.textContent = d.keyword || '—';
+  }).catch(function(){});
+}
+setInterval(loadStatus, 3000);
+loadStatus();
+
+// CONNECT
+function renderConnect() {
+  var box = document.getElementById('connect-body');
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    if (d.state === 'connected') {
+      box.innerHTML = '<div class="connected-box"><div class="connected-icon">✅</div><div><div class="connected-num">+' + (d.phone||'') + '</div><div class="connected-sub">WhatsApp подключён и работает</div></div></div>' +
+        '<div class="panel"><div class="panel-title">Текущий статус</div><p style="font-size:13px;color:var(--txt2);margin-bottom:16px">Бот активен. Кодовое слово: <strong style="color:var(--green)">' + d.keyword + '</strong></p>' +
+        '<button class="btn btn-danger" onclick="disconnectWA()">🔌 Отключить и сменить номер</button></div>';
+    } else if (d.state === 'qr') {
+      box.innerHTML = '<div class="panel"><div class="qr-center">' +
+        '<div class="qr-frame"><img src="/qr.png?t=' + Date.now() + '" alt="QR"></div>' +
+        '<div class="steps">' +
+        '<div><span class="step-num">1</span>Откройте <strong>WhatsApp</strong> на телефоне</div>' +
+        '<div><span class="step-num">2</span>Нажмите ⋮ → <strong>Связанные устройства</strong></div>' +
+        '<div><span class="step-num">3</span>Нажмите <strong>Привязать устройство</strong></div>' +
+        '<div><span class="step-num">4</span>Наведите камеру на QR-код</div>' +
+        '</div></div></div>';
+      setTimeout(renderConnect, 3000);
+    } else {
+      box.innerHTML = '<div class="panel" style="text-align:center;padding:40px;color:var(--txt2)">⏳ Запускается...<br><br><small>Обновите страницу через несколько секунд</small></div>';
+      setTimeout(renderConnect, 2000);
+    }
+  });
+}
+
+// MANUAL - switch modes
+function switchToEditor() {
+  document.getElementById('chat-wrap').style.display='none';
+  document.getElementById('editor-wrap').style.display='block';
+  if (goodsCount === 0) addGood();
+}
+function switchToChat() {
+  document.getElementById('editor-wrap').style.display='none';
+  document.getElementById('chat-wrap').style.display='block';
+}
+
+// PARSE CHAT → fill editor
+function parseChat() {
+  var text = document.getElementById('chat-text').value.trim();
+  if (!text) { showAlert('Введите текст переписки', 'err'); return; }
+
+  var btn = document.getElementById('parse-btn');
+  var spin = document.getElementById('parse-spin');
+  btn.disabled = true; spin.style.display='inline-block';
+  hideAlert();
+
+  fetch('/parse', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:text}) })
+    .then(function(r){return r.json()})
+    .then(function(d) {
+      if (!d.ok) { showAlert('Ошибка: ' + (d.error||'Неизвестная'), 'err'); return; }
+
+      fillEditor(d.data);
+      switchToEditor();
+
+      var v = d.validation;
+      if (v && !v.valid) {
+        var msg = '\u274C Не хватает обязательных данных:\n\n';
+        v.required.forEach(function(m) { msg += '\u2022 ' + m + '\n'; });
+        if (v.optional && v.optional.length > 0) {
+          msg += '\nТакже желательно уточнить:\n';
+          v.optional.forEach(function(m) { msg += '\u2022 ' + m + '\n'; });
+        }
+        msg += '\nЗаполните поля вручную ниже.';
+        showAlert(msg, 'err');
+      } else if (v && v.optional && v.optional.length > 0) {
+        var msg = '\u26A0\uFE0F Основные данные заполнены. Желательно уточнить:\n\n';
+        v.optional.forEach(function(m) { msg += '\u2022 ' + m + '\n'; });
+        showAlert(msg, 'warn');
+      } else {
+        showAlert('\u2705 Все данные заполнены! Проверьте и нажмите \u00ABСоздать PDF\u00BB', 'ok');
+      }
+    })
+    .catch(function(e){ showAlert('Ошибка: ' + e.message, 'err'); })
+    .finally(function(){ btn.disabled=false; spin.style.display='none'; });
+}
+
+function showValidationBlock(text, type) {
+  var existing = document.getElementById('validation-block');
+  if (existing) existing.remove();
+  var el = document.createElement('div');
+  el.id = 'validation-block';
+  var styles = {
+    err: 'background:rgba(255,71,87,0.1);border:2px solid #ff4757;color:#ff6b7a',
+    warn: 'background:rgba(255,170,0,0.1);border:2px solid #ffaa00;color:#ffc947'
+  };
+  el.style.cssText = 'border-radius:12px;padding:18px 20px;margin-bottom:16px;font-size:14px;line-height:2;white-space:pre-line;' + (styles[type] || styles.err);
+  el.textContent = text;
+  var wrap = document.getElementById('editor-wrap');
+  if (wrap) wrap.insertBefore(el, wrap.firstChild);
+}
+
+function fillEditor(d) {
+  var set = function(id, val) { var el=document.getElementById(id); if(el && val) el.value=val; };
+  set('e-name', d.declarant_name);
+  set('e-inn', d.declarant_inn);
+  set('e-addr', d.declarant_address);
+  set('e-exp', d.exporter_name);
+  set('e-country', d.exporter_country);
+  set('e-expaddr', d.exporter_address);
+  set('e-inco', d.delivery_terms);
+  set('e-total', d.total_invoice_amount);
+  set('e-rate', d.exchange_rate);
+  set('e-cont', d.transport_id);
+  set('e-border', d.border_crossing);
+  set('e-weight', d.gross_weight);
+  set('e-packs', d.packages_count);
+  set('e-inv', d.invoice_number);
+  set('e-invdate', d.invoice_date);
+  set('e-contract', d.contract_number);
+  if (d.currency) { var s=document.getElementById('e-cur'); if(s) s.value=d.currency; }
+  if (d.transport_type) { var s=document.getElementById('e-trans'); if(s) s.value=d.transport_type; }
+
+  // Goods
+  document.getElementById('goods-list').innerHTML='';
+  goodsCount=0;
+  (d.goods||[]).forEach(function(g){ addGood(g); });
+  if ((d.goods||[]).length===0) addGood();
+}
+
+// GOODS
+function addGood(data) {
+  goodsCount++;
+  var idx = goodsCount;
+  var d = data || {};
+  var div = document.createElement('div');
+  div.className='goods-row';
+  div.id='good-'+idx;
+  div.innerHTML = '<div class="goods-header"><span class="goods-num">Товар №'+idx+'</span><button class="del-good" onclick="removeGood('+idx+')">×</button></div>' +
+    '<div class="grid-2">' +
+    '<div class="field" style="grid-column:1/-1"><label>Наименование товара</label><input id="gn-'+idx+'" placeholder="Полоса алюминиевая 25 мм" value="'+(d.name||'')+'"></div>' +
+    '<div class="field"><label>ТН ВЭД код</label><input id="gt-'+idx+'" placeholder="7604210000" value="'+(d.tnved||'')+'"></div>' +
+    '<div class="field"><label>Страна происхождения</label><input id="go-'+idx+'" placeholder="CN" value="'+(d.origin_country||'CN')+'"></div>' +
+    '<div class="field"><label>Количество</label><input id="gq-'+idx+'" placeholder="1000" value="'+(d.quantity||'')+'"></div>' +
+    '<div class="field"><label>Единица</label><input id="gu-'+idx+'" placeholder="шт / м / кг" value="'+(d.unit||'шт')+'"></div>' +
+    '<div class="field"><label>Вес брутто (кг)</label><input id="gw-'+idx+'" placeholder="100" value="'+(d.gross_weight||'')+'"></div>' +
+    '<div class="field"><label>Вес нетто (кг)</label><input id="gwn-'+idx+'" placeholder="98" value="'+(d.net_weight||'')+'"></div>' +
+    '<div class="field"><label>Цена (USD)</label><input id="gp-'+idx+'" placeholder="0.00" value="'+(d.total_price||'')+'"></div>' +
+    '</div>';
+  document.getElementById('goods-list').appendChild(div);
+}
+
+function removeGood(idx) {
+  var el = document.getElementById('good-'+idx);
+  if (el) el.remove();
+}
+
+function getEditorData() {
+  var goods = [];
+  document.querySelectorAll('.goods-row').forEach(function(row) {
+    var id = row.id.replace('good-','');
+    var name = document.getElementById('gn-'+id);
+    if (name && name.value.trim()) {
+      goods.push({
+        name: name.value,
+        tnved: (document.getElementById('gt-'+id)||{}).value||'',
+        origin_country: (document.getElementById('go-'+id)||{}).value||'CN',
+        quantity: (document.getElementById('gq-'+id)||{}).value||'',
+        unit: (document.getElementById('gu-'+id)||{}).value||'шт',
+        gross_weight: (document.getElementById('gw-'+id)||{}).value||'',
+        net_weight: (document.getElementById('gwn-'+id)||{}).value||'',
+        total_price: (document.getElementById('gp-'+id)||{}).value||''
+      });
+    }
+  });
+  return {
+    declarant_name: document.getElementById('e-name').value,
+    declarant_inn: document.getElementById('e-inn').value,
+    declarant_address: document.getElementById('e-addr').value,
+    exporter_name: document.getElementById('e-exp').value,
+    exporter_country: document.getElementById('e-country').value,
+    exporter_address: document.getElementById('e-expaddr').value,
+    delivery_terms: document.getElementById('e-inco').value,
+    currency: document.getElementById('e-cur').value,
+    total_invoice_amount: document.getElementById('e-total').value,
+    exchange_rate: document.getElementById('e-rate').value,
+    transport_type: document.getElementById('e-trans').value,
+    transport_id: document.getElementById('e-cont').value,
+    border_crossing: document.getElementById('e-border').value,
+    gross_weight: document.getElementById('e-weight').value,
+    packages_count: document.getElementById('e-packs').value,
+    invoice_number: document.getElementById('e-inv').value,
+    invoice_date: document.getElementById('e-invdate').value,
+    contract_number: document.getElementById('e-contract').value,
+    goods: goods
+  };
+}
+
+function generateFromEditor() {
+  var data = getEditorData();
+  var spin = document.getElementById('gen-spin');
+  var btn = document.querySelector('[onclick="generateFromEditor()"]');
+  btn.disabled=true; spin.style.display='inline-block';
+  hideAlert();
+
+  fetch('/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) })
+    .then(function(r){
+      if (!r.ok) return r.json().then(function(e){throw new Error(e.error||'Ошибка')});
+      return r.blob();
+    })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href=url; a.download='declaration.pdf'; a.click();
+      showAlert('✅ Декларация создана и скачана!', 'ok');
+    })
+    .catch(function(e){
+      showAlert('\u274C ' + e.message, 'err');
+    })
+    .finally(function(){ btn.disabled=false; spin.style.display='none'; });
+}
+
+// HISTORY
+function loadHistory() {
+  fetch('/declarations').then(function(r){return r.json()}).then(function(items) {
+    var tbody = document.getElementById('hist-body');
+    if (!items.length) { tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--txt2);padding:24px">Деклараций пока нет</td></tr>'; return; }
+    tbody.innerHTML = items.map(function(item) {
+      var jsonPath = item.path.replace('.pdf', '_data.json');
+      return '<tr><td><span class="badge badge-blue">'+item.name+'</span></td>' +
+        '<td style="color:var(--txt2);font-size:12px">'+item.file+'</td>' +
+        '<td style="display:flex;gap:8px">' +
+        '<a href="'+item.path+'" target="_blank" class="btn btn-outline" style="padding:6px 14px;font-size:12px">⬇ Скачать</a>' +
+        '<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="openEditor(this.dataset.pdf,this.dataset.json)" data-pdf="'+item.path+'" data-json="'+jsonPath+'">&#9999; Редактировать</button>' +
+        '</td></tr>';
+    }).join('');
+  });
+}
+
+// SETTINGS
+function loadSettings() {
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    var inp = document.getElementById('kw-input');
+    if (inp) inp.value = d.keyword || '';
+    var sel = document.getElementById('limit-select');
+    if (sel && d.msg_limit) sel.value = d.msg_limit.toString();
+  });
+}
+function saveKw() {
+  var kw = document.getElementById('kw-input').value.trim();
+  var msg = document.getElementById('kw-msg');
+  if (!kw) { msg.innerHTML='<span style="color:var(--red)">Введите слово</span>'; return; }
+  fetch('/set-keyword', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:kw})})
+    .then(function(r){return r.json()})
+    .then(function(d){ msg.innerHTML = d.ok ? '<span style="color:var(--green)">✅ Сохранено: "'+d.keyword+'"</span>' : '<span style="color:var(--red)">Ошибка</span>'; loadStatus(); });
+}
+
+function saveLimit() {
+  var val = document.getElementById('limit-select').value;
+  var msg = document.getElementById('limit-msg');
+  fetch('/set-limit', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({limit:parseInt(val)})})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if (d.ok) { msg.innerHTML='<span style="color:var(--green)">✅ Сохранено: '+val+' сообщений</span>'; }
+      else { msg.innerHTML='<span style="color:var(--red)">Ошибка</span>'; }
+    })
+    .catch(function(){ msg.innerHTML='<span style="color:var(--red)">Ошибка соединения</span>'; });
+}
+
+// ALERTS
+function showAlert(msg, type) {
+  var el = document.getElementById('manual-alert');
+  el.style.whiteSpace = 'pre-line';
+  el.textContent = msg;
+  el.className = 'alert show alert-' + (type === 'ok' ? 'ok' : type === 'warn' ? 'warn' : 'err');
+}
+function hideAlert() {
+  var el = document.getElementById('manual-alert');
+  el.className = 'alert';
+}
+
+function disconnectWA() {
+  if (confirm('Отключить WhatsApp?')) {
+    fetch('/logout', {method:'POST'}).then(function(){ showPage('connect'); renderConnect(); });
+  }
+}
+
+var editorData = null;
+var editorPdfPath = null;
+
+function openEditor(pdfPath, jsonPath) {
+  editorPdfPath = pdfPath;
+  var jPath = jsonPath || pdfPath.replace('.pdf', '_data.json');
+  fetch('/dl-json?path=' + encodeURIComponent(jPath))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      editorData = data;
+      renderEditorForm(data);
+      document.getElementById('editor-overlay').style.display = 'block';
+    })
+    .catch(function(e) {
+      alert('Не удалось загрузить данные: ' + e.message);
+    });
+}
+
+function closeEditor() {
+  document.getElementById('editor-overlay').style.display = 'none';
+  editorData = null;
+}
+
+function field(label, key, value, type) {
+  type = type || 'text';
+  return '<div style="margin-bottom:14px">' +
+    '<label style="display:block;font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">' + label + '</label>' +
+    '<input type="' + type + '" id="ef_' + key + '" value="' + (value||'').toString().replace(/"/g,'&quot;') + '" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--txt);font-size:13px;padding:9px 12px;outline:none">' +
+    '</div>';
+}
+
+function renderEditorForm(data) {
+  var f = document.getElementById('editor-form');
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">';
+  html += field('Декларант / Компания', 'declarant_name', data.declarant_name);
+  html += field('БИН / ИИН', 'declarant_inn', data.declarant_inn);
+  html += field('Адрес декларанта', 'declarant_address', data.declarant_address);
+  html += field('Телефон', 'phone', data.phone);
+  html += field('Отправитель', 'exporter_name', data.exporter_name);
+  html += field('Страна отправления', 'exporter_country', data.exporter_country);
+  html += field('Адрес отправителя', 'exporter_address', data.exporter_address);
+  html += field('Трек-номер / Контейнер', 'transport_id', data.transport_id);
+  html += field('Условия поставки', 'delivery_terms', data.delivery_terms);
+  html += field('Валюта', 'currency', data.currency);
+  html += field('Сумма по инвойсу', 'total_invoice_amount', data.total_invoice_amount);
+  html += field('Курс валюты', 'exchange_rate', data.exchange_rate);
+  html += field('Таможенный пост', 'border_crossing', data.border_crossing);
+  html += field('Вес брутто (кг)', 'gross_weight', data.gross_weight);
+  html += field('Количество мест', 'packages_count', data.packages_count);
+  html += field('Номер инвойса', 'invoice_number', data.invoice_number);
+  html += field('Дата инвойса', 'invoice_date', data.invoice_date);
+  html += field('Номер контракта', 'contract_number', data.contract_number);
+  html += '</div>';
+
+  html += '<div style="font-size:13px;font-weight:600;margin:16px 0 10px;color:var(--ac)">Товары</div>';
+  (data.goods || []).forEach(function(g, i) {
+    html += '<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px">';
+    html += '<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Товар ' + (i+1) + '</div>';
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px">';
+    html += field('Наименование', 'g'+i+'_name', g.name);
+    html += field('Код ТН ВЭД', 'g'+i+'_tnved', g.tnved);
+    html += field('Количество', 'g'+i+'_quantity', g.quantity);
+    html += field('Цена USD', 'g'+i+'_total_price', g.total_price);
+    html += field('Вес кг', 'g'+i+'_gross_weight', g.gross_weight);
+    html += '</div></div>';
+  });
+
+  f.innerHTML = html;
+}
+
+function collectEditorData() {
+  var d = Object.assign({}, editorData);
+  var keys = ['declarant_name','declarant_inn','declarant_address','phone','exporter_name','exporter_country',
+    'exporter_address','transport_id','delivery_terms','currency','total_invoice_amount','exchange_rate',
+    'border_crossing','gross_weight','packages_count','invoice_number','invoice_date','contract_number'];
+  keys.forEach(function(k) {
+    var el = document.getElementById('ef_' + k);
+    if (el) d[k] = el.value;
+  });
+  (d.goods || []).forEach(function(g, i) {
+    ['name','tnved','quantity','total_price','gross_weight'].forEach(function(k) {
+      var el = document.getElementById('ef_g'+i+'_'+k);
+      if (el) g[k] = el.value;
+    });
+  });
+  return d;
+}
+
+function saveEditor() {
+  var btn = document.getElementById('save-btn');
+  var msg = document.getElementById('editor-msg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Генерирую...';
+  msg.textContent = '';
+
+  var data = collectEditorData();
+
+  fetch('/regenerate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ data: data, pdfPath: editorPdfPath })
+  })
+  .then(function(r) {
+    if (!r.ok) return r.json().then(function(e){throw new Error(e.error||'Ошибка')});
+    return r.blob();
+  })
+  .then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'declaration_edited.pdf'; a.click();
+    msg.style.color = 'var(--ac)';
+    msg.textContent = '✅ Декларация обновлена и скачана!';
+    loadHistory();
+  })
+  .catch(function(e) {
+    msg.style.color = 'var(--warn)';
+    msg.textContent = '❌ ' + e.message;
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить и скачать PDF';
+  });
+}
+
+
+function searchTnved() {
+  var name = document.getElementById('tnved-name').value.trim();
+  var material = document.getElementById('tnved-material').value.trim();
+  var btn = document.getElementById('tnved-btn');
+  var result = document.getElementById('tnved-result');
+  if (!name) { alert('Введите название товара'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Ищу на keden.kgd.gov.kz...';
+  result.style.display = 'none';
+
+  fetch('/search-tnved', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name: name, material: material })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error(d.error);
+    document.getElementById('tnved-code').textContent = d.code || '—';
+    document.getElementById('tnved-desc').textContent = d.description || '—';
+    document.getElementById('tnved-duty').textContent = d.duty_rate || '—';
+    document.getElementById('tnved-vat') && (document.getElementById('tnved-vat').textContent = d.vat || '12%');
+    document.getElementById('tnved-reason').textContent = 'Источник: keden.kgd.gov.kz (официальный портал КГД РК)';
+    document.getElementById('tnved-conf').textContent = '🟢 Официальный источник: keden.kgd.gov.kz';
+
+    var allBox = document.getElementById('tnved-all');
+    if (allBox && d.all_results && d.all_results.length > 1) {
+      allBox.style.display = 'block';
+      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">Все результаты с keden.kgd.gov.kz — нажмите чтобы выбрать:</div>' +
+        d.all_results.map(function(r) {
+          var safeDesc = r.description.replace(/'/g, '').slice(0, 120);
+          return '<div data-code="' + r.code + '" onclick="selectTnvedEl(this)" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer">' +
+          '<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">' + r.code + '</span>' +
+          '<span style="font-size:12px;color:var(--txt2)">' + r.description.slice(0,200) + '</span></div>';
+        }).join('');
+    } else if (allBox) {
+      allBox.style.display = 'none';
+    }
+    result.style.display = 'block';
+  })
+  .catch(function(e) { alert('Ошибка: ' + e.message); })
+  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Искать на keden.kgd.gov.kz'; });
+}
+
+function selectTnved(code, desc) {
+  document.getElementById('tnved-code').textContent = code;
+  document.getElementById('tnved-desc').textContent = desc;
+}
+function selectTnvedEl(el) {
+  var code = el.dataset.code;
+  document.getElementById('tnved-code').textContent = code;
+  document.getElementById('tnved-desc').textContent = el.querySelector('span:last-child').textContent;
+}
+
+function copyTnved() {
+  var code = document.getElementById('tnved-code').textContent;
+  navigator.clipboard.writeText(code).then(function() {
+    var btn = event.target;
+    btn.textContent = '✅ Скопировано';
+    setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000);
+  });
+}
+
+</script>
+
+    <!-- EDITOR MODAL -->
+    <div id="editor-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px">
+      <div style="max-width:800px;margin:0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div style="font-size:18px;font-weight:600">✏️ Редактировать декларацию</div>
+          <button onclick="closeEditor()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer">✕</button>
+        </div>
+        <div id="editor-form"></div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button class="btn btn-primary" onclick="saveEditor()" id="save-btn">💾 Сохранить и скачать PDF</button>
+          <button class="btn btn-secondary" onclick="closeEditor()">Отмена</button>
+        </div>
+        <div id="editor-msg" style="margin-top:12px;font-size:13px"></div>
+      </div>
+    </div>
+</body>
+</html>`;
+}
+
+
+// loadStatus defined above
+
+function renderConnectOLD_DISABLED() {
+  var box = document.getElementById('connect-content');
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    if (d.state === 'connected') {
+      box.innerHTML = '<div class="connected-info"><div class="connected-icon">✅</div><div><div style="font-size:18px;font-weight:600;color:var(--ac)">WhatsApp подключён</div><div style="color:var(--txt2);margin-top:4px">Номер: <b style="color:var(--txt)">' + (d.phone||'—') + '</b></div></div></div>' +
+        '<div class="section"><div class="section-title">Подключённый аккаунт</div><p style="color:var(--txt2);font-size:13px;margin-bottom:16px">Бот активен. Напишите кодовое слово <b style="color:var(--ac)">' + d.keyword + '</b> в любом чате чтобы создать декларацию.</p>' +
+        '<button class="btn btn-danger" onclick="disconnectWA()">Отключить и сменить номер</button></div>';
+    } else if (d.state === 'qr') {
+      box.innerHTML = '<div class="section"><div class="qr-wrap">' +
+        '<div class="qr-img"><img src="/qr.png?t=' + Date.now() + '" alt="QR"></div>' +
+        '<div class="steps"><b>Как подключить WhatsApp:</b><br>' +
+        '1. Откройте WhatsApp на телефоне<br>' +
+        '2. Нажмите ⋮ → <b>Связанные устройства</b><br>' +
+        '3. Нажмите <b>Привязать устройство</b><br>' +
+        '4. Наведите камеру на QR-код<br><br>' +
+        '<span style="color:var(--ac)">⟳ Страница обновится автоматически</span></div>' +
+        '</div></div>';
+      setTimeout(renderConnect, 3000);
+    } else {
+      box.innerHTML = '<div class="section"><div style="text-align:center;padding:30px;color:var(--txt2)">⏳ Бот запускается...<br><br><small>Обновите страницу через несколько секунд</small></div></div>';
+      setTimeout(renderConnect, 2000);
+    }
+  });
+}
+
+function saveKeyword() {
+  var kw = document.getElementById('keyword-input').value.trim();
+  var msg = document.getElementById('keyword-msg');
+  if (!kw) { msg.innerHTML = '<span style="color:var(--warn)">Введите кодовое слово</span>'; return; }
+  fetch('/set-keyword', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({keyword:kw}) })
+    .then(function(r){return r.json()})
+    .then(function(d) {
+      if (d.ok) { msg.innerHTML = '<span style="color:var(--ac)">✅ Сохранено: "' + d.keyword + '"</span>'; loadStatus(); }
+      else { msg.innerHTML = '<span style="color:var(--warn)">Ошибка сохранения</span>'; }
+    });
+}
+
+function loadSettings() {
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    var inp = document.getElementById('keyword-input');
+    if (inp) inp.value = d.keyword || '';
+  });
+}
+
+function submitManual() {
+  var text = document.getElementById('manual-text').value.trim();
+  var alertBox = document.getElementById('manual-alert');
+  var btn = document.getElementById('manual-btn');
+  var spinner = document.getElementById('manual-spinner');
+  if (!text) { alertBox.style.display='block'; alertBox.className='alert alert-error'; alertBox.textContent='Введите текст переписки'; return; }
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  alertBox.style.display = 'none';
+
+  fetch('/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:text}) })
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(e){throw new Error(e.error||'Ошибка')});
+      return r.blob();
+    })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'declaration.pdf'; a.click();
+      alertBox.style.display='block'; alertBox.className='alert alert-success'; alertBox.textContent='✅ Декларация создана и скачана!';
+      loadStatus();
+    })
+    .catch(function(e) {
+      alertBox.style.display='block'; alertBox.className='alert alert-error'; alertBox.textContent='❌ ' + e.message;
+    })
+    .finally(function() { btn.disabled=false; spinner.style.display='none'; });
+}
+
+function loadHistory() {
+  fetch('/declarations').then(function(r){return r.json()}).then(function(items) {
+    var tbody = document.getElementById('history-table');
+    if (!items.length) { tbody.innerHTML='<tr><td colspan="4" style="color:var(--txt2);text-align:center;padding:20px">Деклараций пока нет</td></tr>'; return; }
+    tbody.innerHTML = items.map(function(item) {
+      return '<tr>' +
+        '<td><span class="tag">' + item.name + '</span></td>' +
+        '<td style="color:var(--txt2);font-size:11px">' + item.file + '</td>' +
+        '<td><a href="' + item.path + '" target="_blank" style="color:var(--ac);text-decoration:none;font-size:12px">⬇ Скачать</a></td>' +
+        '<td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openEditor(' + JSON.stringify(item.name + '/' + item.file) + ')">✏️ Редактировать</button></td>' +
+        '</tr>';
+    }).join('');
+  });
+}
+
+function openEditor(filePath) {
+  showPage('edit');
+  var wrap = document.getElementById('edit-form-wrap');
+  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt2)">⏳ Загружаю данные...</div>';
+
+  fetch('/get-data?folder=' + encodeURIComponent(filePath))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      data._savePath = filePath;
+      renderEditForm(data);
+    })
+    .catch(function() {
+      wrap.innerHTML = '<div class="alert alert-error">Не удалось загрузить данные декларации. Убедитесь что рядом с PDF есть _data.json файл.</div>';
+    });
+}
+
+function renderEditForm(data) {
+  var wrap = document.getElementById('edit-form-wrap');
+  var goods = data.goods || [];
+
+  function field(label, key, val) {
+    return '<div><label>' + label + '</label><input type="text" id="ef_' + key + '" value="' + (val||'').replace(/"/g,'&quot;') + '"></div>';
+  }
+
+  var goodsHtml = goods.map(function(g, i) {
+    return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px">' +
+      '<div style="font-size:12px;color:var(--ac);margin-bottom:10px;font-weight:500">Товар ' + (i+1) + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      '<div><label>Наименование</label><input type="text" class="eg_name" data-i="' + i + '" value="' + (g.name||'').replace(/"/g,'&quot;') + '"></div>' +
+      '<div><label>Код ТН ВЭД</label><input type="text" class="eg_tnved" data-i="' + i + '" value="' + (g.tnved||'') + '"></div>' +
+      '<div><label>Кол-во</label><input type="text" class="eg_qty" data-i="' + i + '" value="' + (g.quantity||'') + '"></div>' +
+      '<div><label>Единица</label><input type="text" class="eg_unit" data-i="' + i + '" value="' + (g.unit||'') + '"></div>' +
+      '<div><label>Цена</label><input type="text" class="eg_price" data-i="' + i + '" value="' + (g.price||'') + '"></div>' +
+      '<div><label>Сумма</label><input type="text" class="eg_total" data-i="' + i + '" value="' + (g.total_price||'') + '"></div>' +
+      '<div><label>Вес брутто (кг)</label><input type="text" class="eg_gross" data-i="' + i + '" value="' + (g.gross_weight||'') + '"></div>' +
+      '<div><label>Страна происхождения</label><input type="text" class="eg_country" data-i="' + i + '" value="' + (g.origin_country||'CN') + '"></div>' +
+      '</div></div>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="section"><div class="section-title">Декларант и отправитель</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">' +
+    field('Название декларанта', 'declarant_name', data.declarant_name) +
+    field('БИН/ИИН', 'declarant_inn', data.declarant_inn) +
+    field('Адрес декларанта', 'declarant_address', data.declarant_address) +
+    field('Телефон', 'declarant_phone', data.declarant_phone) +
+    field('Отправитель', 'exporter_name', data.exporter_name) +
+    field('Страна отправления', 'exporter_country', data.exporter_country) +
+    field('Адрес отправителя', 'exporter_address', data.exporter_address) +
+    '</div></div>' +
+
+    '<div class="section"><div class="section-title">Логистика и финансы</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">' +
+    field('Условия поставки', 'delivery_terms', data.delivery_terms) +
+    field('Валюта', 'currency', data.currency) +
+    field('Сумма по инвойсу', 'total_invoice_amount', data.total_invoice_amount) +
+    field('Курс валюты (тг)', 'exchange_rate', data.exchange_rate) +
+    field('Номер контейнера/транспорта', 'transport_id', data.transport_id) +
+    field('Таможенный пост', 'border_crossing', data.border_crossing) +
+    field('Вес брутто общий (кг)', 'gross_weight', data.gross_weight) +
+    field('Количество мест', 'packages_count', data.packages_count) +
+    field('Номер инвойса', 'invoice_number', data.invoice_number) +
+    field('Дата инвойса', 'invoice_date', data.invoice_date) +
+    field('Номер контракта', 'contract_number', data.contract_number) +
+    '</div></div>' +
+
+    '<div class="section"><div class="section-title">Товары</div>' +
+    goodsHtml + '</div>' +
+
+    '<div style="display:flex;gap:12px;margin-top:4px">' +
+    '<button class="btn btn-primary" onclick="saveEdit(' + JSON.stringify(JSON.stringify(data)) + ')">⬇ Сохранить и скачать PDF</button>' +
+    '<button class="btn btn-secondary" onclick="showPage(\'history\')">&#8592; Назад</button>' +
+    '</div>';
+
+  // Store data reference
+  window._editData = data;
+}
+
+function saveEdit(dataStr) {
+  var data = JSON.parse(dataStr);
+
+  // Read all edited fields
+  document.querySelectorAll('[id^="ef_"]').forEach(function(inp) {
+    var key = inp.id.replace('ef_', '');
+    data[key] = inp.value;
+  });
+
+  // Read goods
+  var goods = data.goods || [];
+  document.querySelectorAll('.eg_name').forEach(function(inp) {
+    var i = parseInt(inp.dataset.i);
+    if (!goods[i]) goods[i] = {};
+    goods[i].name = inp.value;
+  });
+  document.querySelectorAll('.eg_tnved').forEach(function(inp) { goods[parseInt(inp.dataset.i)].tnved = inp.value; });
+  document.querySelectorAll('.eg_qty').forEach(function(inp) { goods[parseInt(inp.dataset.i)].quantity = inp.value; });
+  document.querySelectorAll('.eg_unit').forEach(function(inp) { goods[parseInt(inp.dataset.i)].unit = inp.value; });
+  document.querySelectorAll('.eg_price').forEach(function(inp) { goods[parseInt(inp.dataset.i)].price = inp.value; });
+  document.querySelectorAll('.eg_total').forEach(function(inp) { goods[parseInt(inp.dataset.i)].total_price = inp.value; });
+  document.querySelectorAll('.eg_gross').forEach(function(inp) { goods[parseInt(inp.dataset.i)].gross_weight = inp.value; });
+  document.querySelectorAll('.eg_country').forEach(function(inp) { goods[parseInt(inp.dataset.i)].origin_country = inp.value; });
+  data.goods = goods;
+
+  var alert = document.getElementById('edit-alert');
+  alert.style.display = 'block';
+  alert.className = 'alert alert-success';
+  alert.textContent = '⏳ Генерирую PDF...';
+
+  fetch('/regenerate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(function(r) {
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.error); });
+    return r.blob();
+  })
+  .then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'declaration_edited.pdf'; a.click();
+    alert.textContent = '✅ PDF обновлён и скачан!';
+  })
+  .catch(function(e) {
+    alert.className = 'alert alert-error';
+    alert.textContent = '❌ Ошибка: ' + e.message;
+  });
+}
+
+// Автообновление статуса
+loadStatus();
+setInterval(loadStatus, 3000);
+
+var editorData = null;
+var editorPdfPath = null;
+
+function openEditor(pdfPath, jsonPath) {
+  editorPdfPath = pdfPath;
+  var jPath = jsonPath || pdfPath.replace('.pdf', '_data.json');
+  fetch('/dl-json?path=' + encodeURIComponent(jPath))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      editorData = data;
+      renderEditorForm(data);
+      document.getElementById('editor-overlay').style.display = 'block';
+    })
+    .catch(function(e) {
+      alert('Не удалось загрузить данные: ' + e.message);
+    });
+}
+
+function closeEditor() {
+  document.getElementById('editor-overlay').style.display = 'none';
+  editorData = null;
+}
+
+function field(label, key, value, type) {
+  type = type || 'text';
+  return '<div style="margin-bottom:14px">' +
+    '<label style="display:block;font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">' + label + '</label>' +
+    '<input type="' + type + '" id="ef_' + key + '" value="' + (value||'').toString().replace(/"/g,'&quot;') + '" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--txt);font-size:13px;padding:9px 12px;outline:none">' +
+    '</div>';
+}
+
+function renderEditorForm(data) {
+  var f = document.getElementById('editor-form');
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">';
+  html += field('Декларант / Компания', 'declarant_name', data.declarant_name);
+  html += field('БИН / ИИН', 'declarant_inn', data.declarant_inn);
+  html += field('Адрес декларанта', 'declarant_address', data.declarant_address);
+  html += field('Телефон', 'phone', data.phone);
+  html += field('Отправитель', 'exporter_name', data.exporter_name);
+  html += field('Страна отправления', 'exporter_country', data.exporter_country);
+  html += field('Адрес отправителя', 'exporter_address', data.exporter_address);
+  html += field('Трек-номер / Контейнер', 'transport_id', data.transport_id);
+  html += field('Условия поставки', 'delivery_terms', data.delivery_terms);
+  html += field('Валюта', 'currency', data.currency);
+  html += field('Сумма по инвойсу', 'total_invoice_amount', data.total_invoice_amount);
+  html += field('Курс валюты', 'exchange_rate', data.exchange_rate);
+  html += field('Таможенный пост', 'border_crossing', data.border_crossing);
+  html += field('Вес брутто (кг)', 'gross_weight', data.gross_weight);
+  html += field('Количество мест', 'packages_count', data.packages_count);
+  html += field('Номер инвойса', 'invoice_number', data.invoice_number);
+  html += field('Дата инвойса', 'invoice_date', data.invoice_date);
+  html += field('Номер контракта', 'contract_number', data.contract_number);
+  html += '</div>';
+
+  html += '<div style="font-size:13px;font-weight:600;margin:16px 0 10px;color:var(--ac)">Товары</div>';
+  (data.goods || []).forEach(function(g, i) {
+    html += '<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px">';
+    html += '<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Товар ' + (i+1) + '</div>';
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px">';
+    html += field('Наименование', 'g'+i+'_name', g.name);
+    html += field('Код ТН ВЭД', 'g'+i+'_tnved', g.tnved);
+    html += field('Количество', 'g'+i+'_quantity', g.quantity);
+    html += field('Цена USD', 'g'+i+'_total_price', g.total_price);
+    html += field('Вес кг', 'g'+i+'_gross_weight', g.gross_weight);
+    html += '</div></div>';
+  });
+
+  f.innerHTML = html;
+}
+
+function collectEditorData() {
+  var d = Object.assign({}, editorData);
+  var keys = ['declarant_name','declarant_inn','declarant_address','phone','exporter_name','exporter_country',
+    'exporter_address','transport_id','delivery_terms','currency','total_invoice_amount','exchange_rate',
+    'border_crossing','gross_weight','packages_count','invoice_number','invoice_date','contract_number'];
+  keys.forEach(function(k) {
+    var el = document.getElementById('ef_' + k);
+    if (el) d[k] = el.value;
+  });
+  (d.goods || []).forEach(function(g, i) {
+    ['name','tnved','quantity','total_price','gross_weight'].forEach(function(k) {
+      var el = document.getElementById('ef_g'+i+'_'+k);
+      if (el) g[k] = el.value;
+    });
+  });
+  return d;
+}
+
+function saveEditor() {
+  var btn = document.getElementById('save-btn');
+  var msg = document.getElementById('editor-msg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Генерирую...';
+  msg.textContent = '';
+
+  var data = collectEditorData();
+
+  fetch('/regenerate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ data: data, pdfPath: editorPdfPath })
+  })
+  .then(function(r) {
+    if (!r.ok) return r.json().then(function(e){throw new Error(e.error||'Ошибка')});
+    return r.blob();
+  })
+  .then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'declaration_edited.pdf'; a.click();
+    msg.style.color = 'var(--ac)';
+    msg.textContent = '✅ Декларация обновлена и скачана!';
+    loadHistory();
+  })
+  .catch(function(e) {
+    msg.style.color = 'var(--warn)';
+    msg.textContent = '❌ ' + e.message;
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить и скачать PDF';
+  });
+}
+
+
+function searchTnved() {
+  var name = document.getElementById('tnved-name').value.trim();
+  var material = document.getElementById('tnved-material').value.trim();
+  var btn = document.getElementById('tnved-btn');
+  var result = document.getElementById('tnved-result');
+  if (!name) { alert('Введите название товара'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Ищу на keden.kgd.gov.kz...';
+  result.style.display = 'none';
+
+  fetch('/search-tnved', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name: name, material: material })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error(d.error);
+    document.getElementById('tnved-code').textContent = d.code || '—';
+    document.getElementById('tnved-desc').textContent = d.description || '—';
+    document.getElementById('tnved-duty').textContent = d.duty_rate || '—';
+    document.getElementById('tnved-vat') && (document.getElementById('tnved-vat').textContent = d.vat || '12%');
+    document.getElementById('tnved-reason').textContent = 'Источник: keden.kgd.gov.kz (официальный портал КГД РК)';
+    document.getElementById('tnved-conf').textContent = '🟢 Официальный источник: keden.kgd.gov.kz';
+
+    var allBox = document.getElementById('tnved-all');
+    if (allBox && d.all_results && d.all_results.length > 1) {
+      allBox.style.display = 'block';
+      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">Все результаты с keden.kgd.gov.kz — нажмите чтобы выбрать:</div>' +
+        d.all_results.map(function(r) {
+          var safeDesc = r.description.replace(/'/g, '').slice(0, 120);
+          return '<div onclick="selectTnved('' + r.code + '','' + safeDesc + '')" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor='var(--ac)'" onmouseout="this.style.borderColor='var(--bd)'">' +
+          '<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">' + r.code + '</span>' +
+          '<span style="font-size:12px;color:var(--txt2)">' + r.description.slice(0,200) + '</span></div>';
+        }).join('');
+    } else if (allBox) {
+      allBox.style.display = 'none';
+    }
+    result.style.display = 'block';
+  })
+  .catch(function(e) { alert('Ошибка: ' + e.message); })
+  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Искать на keden.kgd.gov.kz'; });
+}
+
+function selectTnved(code, desc) {
+  document.getElementById('tnved-code').textContent = code;
+  document.getElementById('tnved-desc').textContent = desc;
+}
+function selectTnvedEl(el) {
+  var code = el.dataset.code;
+  document.getElementById('tnved-code').textContent = code;
+  document.getElementById('tnved-desc').textContent = el.querySelector('span:last-child').textContent;
+}
+
+function copyTnved() {
+  var code = document.getElementById('tnved-code').textContent;
+  navigator.clipboard.writeText(code).then(function() {
+    var btn = event.target;
+    btn.textContent = '✅ Скопировано';
+    setTimeout(function() { btn.textContent = '📋 Скопировать'; }, 2000);
+  });
+}
+
+</script>
+
+    <!-- EDITOR MODAL -->
+    <div id="editor-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px">
+      <div style="max-width:800px;margin:0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div style="font-size:18px;font-weight:600">✏️ Редактировать декларацию</div>
+          <button onclick="closeEditor()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer">✕</button>
+        </div>
+        <div id="editor-form"></div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button class="btn btn-primary" onclick="saveEditor()" id="save-btn">💾 Сохранить и скачать PDF</button>
+          <button class="btn btn-secondary" onclick="closeEditor()">Отмена</button>
+        </div>
+        <div id="editor-msg" style="margin-top:12px;font-size:13px"></div>
+      </div>
+    </div>
+</body>
+</html>
