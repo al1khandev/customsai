@@ -624,17 +624,30 @@ async function searchKeden(query) {
     browser = await puppeteer.launch({
       headless: 'new',
       executablePath: CHROME_PATH,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-web-security', '--disable-features=IsolateOrigins,site-per-process']
     });
     var page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(30000);
-    await page.goto('https://keden.kgd.gov.kz/tnved', { waitUntil: 'networkidle2' });
-    await new Promise(function(r) { setTimeout(r, 3000); });
+    await page.setDefaultNavigationTimeout(60000);
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.goto('https://keden.kgd.gov.kz/tnved', { waitUntil: 'domcontentloaded' });
 
-    // Type in search
-    await page.type('input[type="search"]', query, { delay: 80 });
+    // Wait longer for React to render
+    await new Promise(function(r) { setTimeout(r, 8000); });
+
+    // Try multiple selectors
+    var searchInput = await page.$('input[type="search"]') ||
+                      await page.$('input[placeholder*="оиск"]') ||
+                      await page.$('input[placeholder*="овар"]') ||
+                      await page.$('.ant-input') ||
+                      await page.$('input');
+
+    if (!searchInput) throw new Error('Search input not found after 8s wait');
+
+    await searchInput.click();
+    await new Promise(function(r) { setTimeout(r, 500); });
+    await searchInput.type(query, { delay: 100 });
     await page.keyboard.press('Enter');
-    await new Promise(function(r) { setTimeout(r, 3000); });
+    await new Promise(function(r) { setTimeout(r, 5000); });
 
     // Extract results with descriptions
     var results = await page.evaluate(function() {
