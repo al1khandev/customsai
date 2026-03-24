@@ -19,6 +19,38 @@ function ensureDirSync(dirPath) {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
 }
 
+function removePathIfExists(targetPath) {
+  try {
+    if (fs.existsSync(targetPath)) fs.rmSync(targetPath, { recursive: true, force: true });
+  } catch(e) {
+    console.log('⚠️ Не удалось удалить stale lock: ' + targetPath + ' — ' + e.message);
+  }
+}
+
+function cleanupChromeSingletonLocks(rootDir) {
+  if (!fs.existsSync(rootDir)) return;
+
+  var entries = [];
+  try {
+    entries = fs.readdirSync(rootDir, { withFileTypes: true });
+  } catch(e) {
+    console.log('⚠️ Не удалось прочитать auth dir для cleanup: ' + e.message);
+    return;
+  }
+
+  entries.forEach(function(entry) {
+    var fullPath = path.join(rootDir, entry.name);
+
+    if (entry.name === 'SingletonLock' || entry.name === 'SingletonSocket' || entry.name === 'SingletonCookie') {
+      console.log('🧹 Удаляю stale Chromium lock: ' + fullPath);
+      removePathIfExists(fullPath);
+      return;
+    }
+
+    if (entry.isDirectory()) cleanupChromeSingletonLocks(fullPath);
+  });
+}
+
 function getPanelUrl(port) {
   if (process.env.PUBLIC_PANEL_URL) return process.env.PUBLIC_PANEL_URL;
   if (process.env.RAILWAY_STATIC_URL) return 'https://' + process.env.RAILWAY_STATIC_URL;
@@ -28,6 +60,7 @@ function getPanelUrl(port) {
 ensureDirSync(DATA_DIR);
 ensureDirSync(AUTH_DIR);
 ensureDirSync(DECLARATIONS_DIR);
+cleanupChromeSingletonLocks(AUTH_DIR);
 
 // Auto-detect Chrome path (Mac or Linux)
 const CHROME_PATH = process.env.PUPPETEER_EXECUTABLE_PATH ||
