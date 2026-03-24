@@ -1212,22 +1212,30 @@ client.on('message', handleMessage);
 client.on('message_create', handleMessage);
 
 
-function initializeClientWithRetry() {
+function initializeClientWithRetry(attempt) {
+  var maxAttempts = 24;
+  var retryDelayMs = 10000;
+  var currentAttempt = attempt || 1;
+
   cleanupChromeSingletonLocks(AUTH_DIR);
   cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
 
   client.initialize().catch(function(err) {
     var message = (err && err.message) ? err.message : String(err);
-    if (message.indexOf('profile appears to be in use') >= 0 || message.indexOf('ProcessSingleton') >= 0) {
-      console.log('🧹 Обнаружен Chromium profile lock, очищаю session dir и пробую ещё раз...');
+    var isProfileLock = message.indexOf('profile appears to be in use') >= 0 || message.indexOf('ProcessSingleton') >= 0;
+
+    if (isProfileLock && currentAttempt < maxAttempts) {
+      console.log('⏳ Chromium profile ещё занят другим Railway deploy. Попытка ' + currentAttempt + '/' + maxAttempts + ', жду ' + Math.round(retryDelayMs / 1000) + ' сек...');
       cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
       setTimeout(function() {
-        client.initialize().catch(function(retryErr) {
-          console.error('❌ Повторный запуск WhatsApp не удался:', retryErr.message || retryErr);
-          process.exit(1);
-        });
-      }, 3000);
+        initializeClientWithRetry(currentAttempt + 1);
+      }, retryDelayMs);
       return;
+    }
+
+    if (isProfileLock) {
+      console.error('❌ WhatsApp не смог стартовать после ожидания освобождения профиля:', message);
+      process.exit(1);
     }
 
     console.error('❌ Ошибка запуска WhatsApp:', message);
