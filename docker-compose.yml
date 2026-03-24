@@ -1,0 +1,21 @@
+services:
+  customsai:
+    build: .
+    container_name: customsai
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      DATA_DIR: /data
+      AUTH_DIR: /data/whatsapp-auth
+      DECLARATIONS_DIR: /data/declarations
+      SETTINGS_FILE: /data/settings.json
+      KEDEN_TNVED_URL: https://keden.kz/tnved
+    volumes:
+      - customsai_data:/data
+
+volumes:
+  customsai_data:

@@ -36,10 +36,22 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev
 
 COPY . .
 
+ENV DATA_DIR=/data
+ENV AUTH_DIR=/data/whatsapp-auth
+ENV DECLARATIONS_DIR=/data/declarations
+ENV SETTINGS_FILE=/data/settings.json
+ENV KEDEN_TNVED_URL=https://keden.kz/tnved
+
+RUN mkdir -p /data
+
+VOLUME ["/data"]
+
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 CMD wget -qO- "http://127.0.0.1:${PORT:-3000}/health" || exit 1
 
 CMD ["node", "bot.js"]

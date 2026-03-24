@@ -300,7 +300,7 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
     <div class="page" id="page-tnved">
       <div class="page-header">
         <div class="page-title">Поиск ТН ВЭД</div>
-        <div class="page-sub">Введите название товара — система найдёт точный код на keden.kgd.gov.kz</div>
+        <div class="page-sub">Введите название товара и проверьте результат только по официальному источнику keden.kz</div>
       </div>
       <div class="panel">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -313,7 +313,7 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
             <input type="text" id="tnved-material" placeholder="Например: алюминий, пластик, хлопок...">
           </div>
         </div>
-        <button class="btn btn-primary" onclick="searchTnved()" id="tnved-btn">🔍 Найти код на keden.kgd.gov.kz</button>
+        <button class="btn btn-primary" onclick="searchTnved()" id="tnved-btn">🔍 Найти код на keden.kz</button>
       </div>
       <div id="tnved-result" style="display:none" class="panel">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
@@ -341,7 +341,7 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
           <div style="font-size:14px" id="tnved-vat">12%</div>
         </div>
         <div style="margin-top:12px;background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:12px;font-size:12px;color:var(--ac)">
-          ✅ Данные берутся только с официального источника: keden.kgd.gov.kz (КГД МФ РК)
+          ✅ Данные берутся только с официального источника: keden.kz
         </div>
         <div id="tnved-all" style="display:none;margin-top:16px"></div>
         <div style="margin-top:10px;font-size:11px;color:var(--txt2)">
@@ -847,7 +847,7 @@ function searchTnved() {
   if (!name) { alert('Введите название товара'); return; }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Ищу на keden.kgd.gov.kz...';
+  btn.textContent = '⏳ Ищу на keden.kz...';
   result.style.display = 'none';
 
   fetch('/search-tnved', {
@@ -858,19 +858,21 @@ function searchTnved() {
   .then(function(r) { return r.json(); })
   .then(function(d) {
     if (d.error) throw new Error(d.error);
+    var fallbackDesc = d.description || ((d.all_results && d.all_results[0]) ? d.all_results[0].description : '—');
     document.getElementById('tnved-code').textContent = d.code || '—';
-    document.getElementById('tnved-desc').textContent = d.description || '—';
-    document.getElementById('tnved-duty').textContent = d.duty_rate || '—';
+    document.getElementById('tnved-desc').textContent = fallbackDesc;
+    document.getElementById('tnved-duty').textContent = d.status === 'confirmed' ? 'Подтверждено' : 'Нужен ручной выбор';
     document.getElementById('tnved-vat') && (document.getElementById('tnved-vat').textContent = d.vat || '12%');
-    document.getElementById('tnved-reason').textContent = 'Источник: keden.kgd.gov.kz (официальный портал КГД РК)';
-    document.getElementById('tnved-conf').textContent = '🟢 Официальный источник: keden.kgd.gov.kz';
+    document.getElementById('tnved-reason').textContent = d.reason || 'Источник: keden.kz';
+    document.getElementById('tnved-conf').textContent = d.status === 'confirmed'
+      ? '🟢 Код подтвержден официальным поиском keden.kz'
+      : '🟡 Найдено несколько вариантов. Выберите код вручную из списка keden.kz';
 
     var allBox = document.getElementById('tnved-all');
-    if (allBox && d.all_results && d.all_results.length > 1) {
+    if (allBox && d.all_results && d.all_results.length > 0) {
       allBox.style.display = 'block';
-      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">Все результаты с keden.kgd.gov.kz — нажмите чтобы выбрать:</div>' +
+      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">' + (d.status === 'confirmed' ? 'Результат с keden.kz:' : 'Результаты с keden.kz — нажмите чтобы выбрать:') + '</div>' +
         d.all_results.map(function(r) {
-          var safeDesc = r.description.replace(/'/g, '').slice(0, 120);
           return '<div data-code="' + r.code + '" onclick="selectTnvedEl(this)" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer">' +
           '<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">' + r.code + '</span>' +
           '<span style="font-size:12px;color:var(--txt2)">' + r.description.slice(0,200) + '</span></div>';
@@ -881,7 +883,7 @@ function searchTnved() {
     result.style.display = 'block';
   })
   .catch(function(e) { alert('Ошибка: ' + e.message); })
-  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Искать на keden.kgd.gov.kz'; });
+  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Найти код на keden.kz'; });
 }
 
 function selectTnved(code, desc) {
@@ -1281,7 +1283,7 @@ function searchTnved() {
   if (!name) { alert('Введите название товара'); return; }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Ищу на keden.kgd.gov.kz...';
+  btn.textContent = '⏳ Ищу на keden.kz...';
   result.style.display = 'none';
 
   fetch('/search-tnved', {
@@ -1292,20 +1294,22 @@ function searchTnved() {
   .then(function(r) { return r.json(); })
   .then(function(d) {
     if (d.error) throw new Error(d.error);
+    var fallbackDesc = d.description || ((d.all_results && d.all_results[0]) ? d.all_results[0].description : '—');
     document.getElementById('tnved-code').textContent = d.code || '—';
-    document.getElementById('tnved-desc').textContent = d.description || '—';
-    document.getElementById('tnved-duty').textContent = d.duty_rate || '—';
+    document.getElementById('tnved-desc').textContent = fallbackDesc;
+    document.getElementById('tnved-duty').textContent = d.status === 'confirmed' ? 'Подтверждено' : 'Нужен ручной выбор';
     document.getElementById('tnved-vat') && (document.getElementById('tnved-vat').textContent = d.vat || '12%');
-    document.getElementById('tnved-reason').textContent = 'Источник: keden.kgd.gov.kz (официальный портал КГД РК)';
-    document.getElementById('tnved-conf').textContent = '🟢 Официальный источник: keden.kgd.gov.kz';
+    document.getElementById('tnved-reason').textContent = d.reason || 'Источник: keden.kz';
+    document.getElementById('tnved-conf').textContent = d.status === 'confirmed'
+      ? '🟢 Код подтвержден официальным поиском keden.kz'
+      : '🟡 Найдено несколько вариантов. Выберите код вручную из списка keden.kz';
 
     var allBox = document.getElementById('tnved-all');
-    if (allBox && d.all_results && d.all_results.length > 1) {
+    if (allBox && d.all_results && d.all_results.length > 0) {
       allBox.style.display = 'block';
-      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">Все результаты с keden.kgd.gov.kz — нажмите чтобы выбрать:</div>' +
+      allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">' + (d.status === 'confirmed' ? 'Результат с keden.kz:' : 'Результаты с keden.kz — нажмите чтобы выбрать:') + '</div>' +
         d.all_results.map(function(r) {
-          var safeDesc = r.description.replace(/'/g, '').slice(0, 120);
-          return '<div onclick="selectTnved('' + r.code + '','' + safeDesc + '')" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor='var(--ac)'" onmouseout="this.style.borderColor='var(--bd)'">' +
+          return '<div data-code="' + r.code + '" onclick="selectTnvedEl(this)" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor=\'var(--ac)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">' +
           '<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">' + r.code + '</span>' +
           '<span style="font-size:12px;color:var(--txt2)">' + r.description.slice(0,200) + '</span></div>';
         }).join('');
@@ -1315,7 +1319,7 @@ function searchTnved() {
     result.style.display = 'block';
   })
   .catch(function(e) { alert('Ошибка: ' + e.message); })
-  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Искать на keden.kgd.gov.kz'; });
+  .finally(function() { btn.disabled = false; btn.textContent = '🔍 Найти код на keden.kz'; });
 }
 
 function selectTnved(code, desc) {
