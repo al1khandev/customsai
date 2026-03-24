@@ -537,9 +537,9 @@ function validateDeclarationData(data) {
     data.goods.forEach(function(g, i) {
       if (!g.name) required.push('наименование товара ' + (i+1));
       if (!g.total_price) required.push('цена товара ' + (i+1));
-      if (!g.tnved) required.push('код ТН ВЭД товара ' + (i+1) + ' с keden.kz');
+      if (!g.tnved) optional.push('код ТН ВЭД товара ' + (i+1) + ' требует ручной проверки');
       if (g.tnved && g.tnved_status && g.tnved_status !== 'confirmed') {
-        required.push('подтверждение кода ТН ВЭД товара ' + (i+1) + ' через keden.kz');
+        optional.push('код ТН ВЭД товара ' + (i+1) + ' требует уточнения');
       }
     });
   }
@@ -1153,15 +1153,18 @@ async function handleMessage(msg) {
       }
     });
 
+    if (tnvedIssues.length > 0) {
+      var tnvedMsg = '⚠️ *ТН ВЭД требует уточнения*\n\n';
+      tnvedIssues.forEach(function(item) { tnvedMsg += item + '\n\n'; });
+      tnvedMsg += '_Декларация будет создана без гарантированного кода ТН ВЭД. Проверьте и при необходимости отредактируйте её вручную._';
+      await chat.sendMessage(tnvedMsg);
+    }
+
     // Если не хватает обязательных — СТОП, просим клиента
     if (missingRequired.length > 0) {
       var stopMsg = '❌ *Недостаточно данных для создания декларации*\n\n';
       stopMsg += 'Для оформления декларации необходимо уточнить у клиента:\n\n';
       missingRequired.forEach(function(m) { stopMsg += '🔴 ' + m + '\n'; });
-      if (tnvedIssues.length > 0) {
-        stopMsg += '\nПроблемы с ТН ВЭД по официальному источнику keden.kz:\n';
-        tnvedIssues.forEach(function(item) { stopMsg += item + '\n\n'; });
-      }
       if (missingOptional.length > 0) {
         stopMsg += '\nТакже желательно уточнить:\n';
         missingOptional.forEach(function(m) { stopMsg += '🟡 ' + m + '\n'; });
