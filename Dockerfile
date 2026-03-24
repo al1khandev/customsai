@@ -48,8 +48,6 @@ ENV KEDEN_TNVED_URL=https://keden.kz/tnved
 
 RUN mkdir -p /data
 
-VOLUME ["/data"]
-
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 CMD wget -qO- "http://127.0.0.1:${PORT:-3000}/health" || exit 1
