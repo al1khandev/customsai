@@ -14,6 +14,8 @@ const AUTH_DIR = path.resolve(process.env.AUTH_DIR || path.join(DATA_DIR, 'whats
 const DECLARATIONS_DIR = path.resolve(process.env.DECLARATIONS_DIR || path.join(DATA_DIR, 'declarations'));
 const SETTINGS_FILE = path.resolve(process.env.SETTINGS_FILE || path.join(DATA_DIR, 'settings.json'));
 const KEDEN_TNVED_URL = process.env.KEDEN_TNVED_URL || 'https://keden.kz/tnved';
+const WHATSAPP_CLIENT_ID = process.env.WHATSAPP_CLIENT_ID || 'customsai';
+const WHATSAPP_SESSION_DIR = path.join(AUTH_DIR, 'session-' + WHATSAPP_CLIENT_ID);
 
 function ensureDirSync(dirPath) {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -61,6 +63,7 @@ ensureDirSync(DATA_DIR);
 ensureDirSync(AUTH_DIR);
 ensureDirSync(DECLARATIONS_DIR);
 cleanupChromeSingletonLocks(AUTH_DIR);
+cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
 
 // Auto-detect Chrome path (Mac or Linux)
 const CHROME_PATH = process.env.PUPPETEER_EXECUTABLE_PATH ||
@@ -74,7 +77,7 @@ const PANEL_URL = getPanelUrl(PANEL_PORT);
 const client = new Client({
   authStrategy: new LocalAuth({
     dataPath: AUTH_DIR,
-    clientId: process.env.WHATSAPP_CLIENT_ID || 'customsai'
+    clientId: WHATSAPP_CLIENT_ID
   }),
   puppeteer: {
     headless: true,
@@ -1209,4 +1212,27 @@ client.on('message', handleMessage);
 client.on('message_create', handleMessage);
 
 
-client.initialize();
+function initializeClientWithRetry() {
+  cleanupChromeSingletonLocks(AUTH_DIR);
+  cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
+
+  client.initialize().catch(function(err) {
+    var message = (err && err.message) ? err.message : String(err);
+    if (message.indexOf('profile appears to be in use') >= 0 || message.indexOf('ProcessSingleton') >= 0) {
+      console.log('🧹 Обнаружен Chromium profile lock, очищаю session dir и пробую ещё раз...');
+      cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
+      setTimeout(function() {
+        client.initialize().catch(function(retryErr) {
+          console.error('❌ Повторный запуск WhatsApp не удался:', retryErr.message || retryErr);
+          process.exit(1);
+        });
+      }, 3000);
+      return;
+    }
+
+    console.error('❌ Ошибка запуска WhatsApp:', message);
+    process.exit(1);
+  });
+}
+
+initializeClientWithRetry();
