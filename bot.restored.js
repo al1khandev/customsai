@@ -21,6 +21,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 
 var telegramBot = null;
 var telegramConnected = false;
+var TELEGRAM_BOT_TOKEN_OVERRIDE = null;
 
 function ensureDirSync(dirPath) {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -220,6 +221,38 @@ var webServer = http.createServer(function(req, res) {
           res.writeHead(400); res.end(JSON.stringify({ ok: false }));
         }
       } catch(e) { res.writeHead(400); res.end(); }
+    });
+
+  } else if (url === '/set-telegram-token' && req.method === 'POST') {
+    var body = '';
+    req.on('data', function(d) { body += d; });
+    req.on('end', function() {
+      try {
+        var data = JSON.parse(body);
+        if (data.token && data.token.trim().length > 0) {
+          var token = data.token.trim();
+          var settings = loadSettings();
+          settings.telegram_token = token;
+          saveSettingsFile(settings);
+          console.log('📱 Telegram TOKEN сохранен');
+          
+          // Reinitialize telegram bot
+          if (telegramBot) {
+            telegramBot.stopPolling().catch(function(){});
+          }
+          TELEGRAM_BOT_TOKEN_OVERRIDE = token;
+          initializeTelegramBot();
+          
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, message: 'Telegram TOKEN сохранен' }));
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Пустой TOKEN' }));
+        }
+      } catch(e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      }
     });
 
   } else if (url === '/manual' && req.method === 'POST') {
@@ -1367,7 +1400,14 @@ function initializeClientWithRetry(attempt) {
 
 function initializeTelegramBot() {
   try {
-    telegramBot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+    var token = TELEGRAM_BOT_TOKEN_OVERRIDE || TELEGRAM_BOT_TOKEN;
+    if (!token || token.length === 0) {
+      console.log('⚫ Telegram TOKEN не установлен');
+      telegramConnected = false;
+      return;
+    }
+    
+    telegramBot = new TelegramBot(token, { polling: true });
     
     telegramBot.on('message', async function(msg) {
       var chatId = msg.chat.id;

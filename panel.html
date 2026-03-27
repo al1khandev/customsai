@@ -405,6 +405,25 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
         <div class="panel-title">🔌 WhatsApp</div>
         <button class="btn btn-danger" onclick="disconnectWA()">Отключить и сменить номер</button>
       </div>
+      <div class="panel">
+        <div class="panel-title">📱 Telegram Бот</div>
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:16px">Интегрируйте Telegram для получения деклараций в мессенджере</div>
+        <div id="telegram-status" style="margin-bottom:16px;padding:12px;background:rgba(255,170,0,0.1);border-radius:10px;border:1px solid rgba(255,170,0,0.2);font-size:13px">
+          ⏳ Проверка статуса...
+        </div>
+        <div class="field">
+          <label>TOKEN Telegram Бота (опционально)</label>
+          <input id="telegram-token" type="password" placeholder="123456:ABCDefGhIjKlMnOp..." style="font-size:14px">
+          <small style="color:var(--txt2);display:block;margin-top:6px">
+            🤖 Получить TOKEN: Telegram → @BotFather → /newbot
+          </small>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-blue" onclick="saveTelegramToken()">💾 Сохранить TOKEN</button>
+          <button class="btn btn-outline" onclick="toggleTelegramTokenVisibility()">👁️ Показать</button>
+        </div>
+        <div id="telegram-msg" style="margin-top:12px;font-size:13px"></div>
+      </div>
     </div>
 
   </div>
@@ -735,6 +754,75 @@ function disconnectWA() {
     fetch('/logout', {method:'POST'}).then(function(){ showPage('connect'); renderConnect(); });
   }
 }
+
+// Telegram functions
+function loadTelegramStatus() {
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    var statusEl = document.getElementById('telegram-status');
+    if (!statusEl) return;
+    
+    if (d.telegram_enabled) {
+      if (d.telegram_connected) {
+        statusEl.innerHTML = '✅ Telegram бот <strong>подключен</strong>';
+        statusEl.style.background = 'rgba(0,214,143,0.1)';
+        statusEl.style.borderColor = 'rgba(0,214,143,0.2)';
+      } else {
+        statusEl.innerHTML = '⏳ Telegram бот <strong>инициализируется</strong>...';
+        statusEl.style.background = 'rgba(255,170,0,0.1)';
+        statusEl.style.borderColor = 'rgba(255,170,0,0.2)';
+      }
+    } else {
+      statusEl.innerHTML = '⚫ Telegram бот <strong>отключен</strong> (TOKEN не установлен)';
+      statusEl.style.background = 'rgba(128,128,128,0.1)';
+      statusEl.style.borderColor = 'rgba(128,128,128,0.2)';
+    }
+  });
+}
+
+function toggleTelegramTokenVisibility() {
+  var el = document.getElementById('telegram-token');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function saveTelegramToken() {
+  var token = document.getElementById('telegram-token').value.trim();
+  var msgEl = document.getElementById('telegram-msg');
+  
+  if (!token) {
+    msgEl.innerHTML = '<span style="color:var(--red)">❌ Введите TOKEN Telegram</span>';
+    return;
+  }
+  
+  msgEl.innerHTML = '<span style="color:var(--txt2)">⏳ Сохраняю TOKEN...</span>';
+  
+  fetch('/set-telegram-token', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token: token})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d && d.ok) {
+      msgEl.innerHTML = '<span style="color:var(--green)">✅ TOKEN сохранен! Бот перезагружается...</span>';
+      document.getElementById('telegram-token').value = '';
+      setTimeout(function() {
+        loadTelegramStatus();
+      }, 3000);
+    } else {
+      msgEl.innerHTML = '<span style="color:var(--red)">❌ ' + (d && d.error ? d.error : 'Ошибка') + '</span>';
+    }
+  })
+  .catch(function(e) {
+    msgEl.innerHTML = '<span style="color:var(--red)">❌ Ошибка: ' + e.message + '</span>';
+  });
+}
+
+// Load Telegram status when settings page opens
+setInterval(function() {
+  if (currentPage === 'settings') {
+    loadTelegramStatus();
+  }
+}, 3000);
 
 // Phone linking functions
 function togglePhoneForm() {
