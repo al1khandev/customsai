@@ -171,12 +171,14 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
         <div class="stat-card green"><div class="stat-val" id="h-state">—</div><div class="stat-lbl">Статус WhatsApp</div></div>
         <div class="stat-card blue"><div class="stat-val" id="h-count">0</div><div class="stat-lbl">Деклараций создано</div></div>
         <div class="stat-card orange"><div class="stat-val" id="h-kw">—</div><div class="stat-lbl">Кодовое слово</div></div>
+        <div class="stat-card" style="background:rgba(0,150,200,0.1);border-color:rgba(0,150,200,0.2)"><div class="stat-val" id="h-tg" style="color:#0096c8">—</div><div class="stat-lbl">Telegram</div></div>
       </div>
       <div class="panel">
         <div class="panel-title">📋 Быстрый старт</div>
         <div class="btn-row">
           <button class="btn btn-green" onclick="showPage('connect')">📱 Подключить WhatsApp</button>
           <button class="btn btn-blue" onclick="showPage('manual')">✍️ Создать декларацию</button>
+          <button class="btn btn-outline" onclick="showTelegramSetup()">📲 Добавить Telegram</button>
           <button class="btn btn-outline" onclick="showPage('history')">📁 Посмотреть историю</button>
         </div>
       </div>
@@ -464,10 +466,24 @@ function loadStatus() {
     var hCount = document.getElementById('h-count');
     var hKw = document.getElementById('h-kw');
     var hKw2 = document.getElementById('h-kw2');
+    var hTg = document.getElementById('h-tg');
     if (hState) hState.textContent = st[1];
     if (hCount) hCount.textContent = d.stats || 0;
     if (hKw) hKw.textContent = d.keyword || '—';
     if (hKw2) hKw2.textContent = d.keyword || '—';
+    
+    if (hTg) {
+      if (d.telegram_enabled && d.telegram_connected) {
+        hTg.textContent = '✅ Подключен';
+        hTg.style.color = '#00c853';
+      } else if (d.telegram_enabled) {
+        hTg.textContent = '⏳ Инициализируется';
+        hTg.style.color = '#ffb300';
+      } else {
+        hTg.textContent = '⚫ Отключен';
+        hTg.style.color = '#666';
+      }
+    }
   }).catch(function(){});
 }
 setInterval(loadStatus, 3000);
@@ -823,6 +839,18 @@ setInterval(function() {
     loadTelegramStatus();
   }
 }, 3000);
+
+// Show Telegram setup from home page
+function showTelegramSetup() {
+  showPage('settings');
+  setTimeout(function() {
+    var telegramEl = document.getElementById('telegram-token');
+    if (telegramEl) {
+      telegramEl.focus();
+      telegramEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 100);
+}
 
 // Phone linking functions
 function togglePhoneForm() {
