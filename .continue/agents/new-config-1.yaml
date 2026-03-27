@@ -1,0 +1,21 @@
+# Free NVIDIA-like setup using GPT-OSS 20B
+name: Free GPT-OSS 20B Setup
+version: 1.0.0
+schema: v1
+
+models:
+  - name: GPT-OSS 20B
+    provider: openai
+    model: openai/gpt-oss-20b:free
+    apiKey: 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
+  - name: Autocomplete Fast
+    provider: openai
+    model: openai/gpt-oss-20b:free
+    apiKey: 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
+
+defaultModel: GPT-OSS 20B
+tabAutocompleteModel:
+  title: Fast Model
+  provider: openai
+  model: openai/gpt-oss-20b:free
+  apiKey: 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

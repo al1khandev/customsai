@@ -203,6 +203,21 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
         <div class="page-title">Подключение WhatsApp</div>
         <div class="page-sub">Сканируйте QR-код чтобы подключить номер</div>
       </div>
+      <div id="phone-link-section" style="display:none;margin-bottom:20px">
+        <div class="panel">
+          <div class="panel-title">📱 Привязать номер телефона</div>
+          <div style="font-size:13px;color:var(--txt2);margin-bottom:12px">Укажите номер телефона, который будет использоваться для WhatsApp</div>
+          <div class="field">
+            <label>Номер телефона (с кодом страны)</label>
+            <input id="phone-input" type="tel" placeholder="+77012345678" style="font-size:14px">
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-blue" onclick="linkPhoneNumber()">📱 Сохранить номер</button>
+            <button class="btn btn-outline" onclick="togglePhoneForm()">Отмена</button>
+          </div>
+          <div id="phone-msg" style="margin-top:12px;font-size:13px"></div>
+        </div>
+      </div>
       <div id="connect-body">Загрузка...</div>
     </div>
 
@@ -442,12 +457,15 @@ loadStatus();
 // CONNECT
 function renderConnect() {
   var box = document.getElementById('connect-body');
+  var phoneSection = document.getElementById('phone-link-section');
   fetch('/status').then(function(r){return r.json()}).then(function(d) {
     if (d.state === 'connected') {
+      phoneSection.style.display = 'none';
       box.innerHTML = '<div class="connected-box"><div class="connected-icon">✅</div><div><div class="connected-num">+' + (d.phone||'') + '</div><div class="connected-sub">WhatsApp подключён и работает</div></div></div>' +
         '<div class="panel"><div class="panel-title">Текущий статус</div><p style="font-size:13px;color:var(--txt2);margin-bottom:16px">Бот активен. Кодовое слово: <strong style="color:var(--green)">' + d.keyword + '</strong></p>' +
         '<button class="btn btn-danger" onclick="disconnectWA()">🔌 Отключить и сменить номер</button></div>';
     } else if (d.state === 'qr') {
+      phoneSection.style.display = 'block';
       box.innerHTML = '<div class="panel"><div class="qr-center">' +
         '<div class="qr-frame"><img src="/qr.png?t=' + Date.now() + '" alt="QR"></div>' +
         '<div class="steps">' +
@@ -455,9 +473,13 @@ function renderConnect() {
         '<div><span class="step-num">2</span>Нажмите ⋮ → <strong>Связанные устройства</strong></div>' +
         '<div><span class="step-num">3</span>Нажмите <strong>Привязать устройство</strong></div>' +
         '<div><span class="step-num">4</span>Наведите камеру на QR-код</div>' +
-        '</div></div></div>';
+        '</div></div>' +
+        '<div style="text-align:center;margin-top:16px">' +
+        '<button class="btn btn-outline" onclick="togglePhoneForm()">📱 Или введите номер телефона</button>' +
+        '</div></div>';
       setTimeout(renderConnect, 3000);
     } else {
+      phoneSection.style.display = 'none';
       box.innerHTML = '<div class="panel" style="text-align:center;padding:40px;color:var(--txt2)">⏳ Запускается...<br><br><small>Обновите страницу через несколько секунд</small></div>';
       setTimeout(renderConnect, 2000);
     }
@@ -712,6 +734,54 @@ function disconnectWA() {
   if (confirm('Отключить WhatsApp?')) {
     fetch('/logout', {method:'POST'}).then(function(){ showPage('connect'); renderConnect(); });
   }
+}
+
+// Phone linking functions
+function togglePhoneForm() {
+  var section = document.getElementById('phone-link-section');
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('phone-input').value = '';
+  document.getElementById('phone-msg').textContent = '';
+}
+
+function linkPhoneNumber() {
+  var phoneInput = document.getElementById('phone-input');
+  var phone = phoneInput.value.trim();
+  var msgEl = document.getElementById('phone-msg');
+  
+  if (!phone) {
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '❌ Введите номер телефона';
+    return;
+  }
+  
+  msgEl.style.color = 'var(--txt2)';
+  msgEl.textContent = '⏳ Сохраняю номер...';
+  
+  fetch('/link-phone', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({phone: phone})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.ok) {
+      msgEl.style.color = 'var(--green)';
+      msgEl.textContent = '✅ ' + d.message;
+      phoneInput.value = '';
+      setTimeout(function() {
+        togglePhoneForm();
+        renderConnect();
+      }, 2000);
+    } else {
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = '❌ ' + (d.error || 'Ошибка');
+    }
+  })
+  .catch(function(e) {
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '❌ Ошибка: ' + e.message;
+  });
 }
 
 var editorData = null;

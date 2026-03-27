@@ -14,6 +14,9 @@ services:
       DECLARATIONS_DIR: /data/declarations
       SETTINGS_FILE: /data/settings.json
       KEDEN_TNVED_URL: https://keden.kz/tnved
+      WHATSAPP_RECONNECT_DELAY_MS: 15000
+      WATCHDOG_INTERVAL_MS: 60000
+      WATCHDOG_MAX_DISCONNECTED_MS: 600000
     volumes:
       - customsai_data:/data
 

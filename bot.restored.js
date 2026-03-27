@@ -66,10 +66,30 @@ cleanupChromeSingletonLocks(AUTH_DIR);
 cleanupChromeSingletonLocks(WHATSAPP_SESSION_DIR);
 
 // Auto-detect Chrome path (Mac or Linux)
-const CHROME_PATH = process.env.PUPPETEER_EXECUTABLE_PATH ||
-  (process.platform === 'darwin'
-    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    : '/usr/bin/chromium');
+function detectChromePath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    const v = process.env.PUPPETEER_EXECUTABLE_PATH;
+    console.log('🔎 Использую PUPPETEER_EXECUTABLE_PATH:', v);
+    return v;
+  }
+
+  var candidate = null;
+  if (process.platform === 'darwin') {
+    candidate = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  } else if (process.platform === 'linux') {
+    candidate = '/usr/bin/chromium';
+  }
+
+  if (candidate && require('fs').existsSync(candidate)) {
+    console.log('🔎 Найден Chrome на пути:', candidate);
+    return candidate;
+  }
+
+  console.log('⚠️ Не найден Chrome по ожидаемым путям. Оставляю путь неизвестным — puppeteer будет использовать встроенный Chromium.');
+  return undefined;
+}
+
+const CHROME_PATH = detectChromePath();
 
 const PANEL_PORT = parseInt(process.env.PORT || '3000', 10);
 const PANEL_URL = getPanelUrl(PANEL_PORT);
@@ -90,6 +110,13 @@ const client = new Client({
 var currentQR = null;
 var botState = 'disconnected';
 var connectedPhone = '';
+var disconnectedAt = Date.now();
+var reinitializeInProgress = false;
+var reconnectTimer = null;
+var watchdogInterval = null;
+var RECONNECT_DELAY_MS = parseInt(process.env.WHATSAPP_RECONNECT_DELAY_MS || '15000', 10);
+var WATCHDOG_INTERVAL_MS = parseInt(process.env.WATCHDOG_INTERVAL_MS || '60000', 10);
+var WATCHDOG_MAX_DISCONNECTED_MS = parseInt(process.env.WATCHDOG_MAX_DISCONNECTED_MS || '600000', 10);
 var KEYWORD = 'декларация 777';
 function loadSettings() {
   try {
@@ -415,6 +442,46 @@ var webServer = http.createServer(function(req, res) {
         res.end(JSON.stringify({ error: e.message }));
       }
     });
+
+  } else if (url === '/link-phone' && req.method === 'POST') {
+    var body = '';
+    req.on('data', function(d) { body += d; });
+    req.on('end', function() {
+      try {
+        var data = JSON.parse(body);
+        var phoneNumber = (data.phone || '').trim().replace(/\D/g, '');
+        
+        if (!phoneNumber || phoneNumber.length < 10) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Некорректный номер телефона' }));
+          return;
+        }
+        
+        // Store phone number in settings
+        var settings = loadSettings();
+        settings.linked_phone = phoneNumber;
+        saveSettingsFile(settings);
+        
+        console.log('📱 Номер телефона для связи: ' + phoneNumber);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          ok: true, 
+          phone: phoneNumber,
+          message: 'Номер сохранён. Отсканируйте QR-код на вашем телефоне для подтверждения.'
+        }));
+      } catch(e) { 
+        res.writeHead(400); 
+        res.end(JSON.stringify({ ok: false, error: e.message })); 
+      }
+    });
+
+  } else if (url === '/get-linked-phone' && req.method === 'GET') {
+    var settings = loadSettings();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      phone: settings.linked_phone || '',
+      connected: connectedPhone || ''
+    }));
 
   } else if (url === '/logout' && req.method === 'POST') {
     client.logout().catch(function(){});
@@ -1069,6 +1136,12 @@ client.on('qr', function(qr) {
 client.on('ready', async function() {
   currentQR = null;
   botState = 'connected';
+  disconnectedAt = null;
+  reinitializeInProgress = false;
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
   statsCount = 0;
   try {
     var info = client.info;
@@ -1079,10 +1152,44 @@ client.on('ready', async function() {
   } catch(e) { console.log('✅ Бот запущен!'); }
 });
 
-client.on('disconnected', function() {
+function scheduleReconnect(reason) {
+  if (reinitializeInProgress) return;
+  reinitializeInProgress = true;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(function() {
+    reconnectTimer = null;
+    console.log('🔁 Пытаюсь восстановить подключение WhatsApp. Причина: ' + reason);
+    initializeClientWithRetry();
+  }, RECONNECT_DELAY_MS);
+}
+
+client.on('disconnected', function(reason) {
   botState = 'disconnected';
+  disconnectedAt = Date.now();
   connectedPhone = '';
-  console.log('🔌 WhatsApp отключён');
+  console.log('🔌 WhatsApp отключён. Причина: ' + (reason || 'unknown'));
+  scheduleReconnect(reason || 'disconnected_event');
+});
+
+client.on('auth_failure', function(message) {
+  botState = 'disconnected';
+  disconnectedAt = Date.now();
+  connectedPhone = '';
+  console.error('❌ Ошибка авторизации WhatsApp: ' + message);
+  scheduleReconnect('auth_failure');
+});
+
+client.on('change_state', function(state) {
+  if (state === 'CONNECTED') {
+    botState = 'connected';
+    disconnectedAt = null;
+    return;
+  }
+  if (state === 'TIMEOUT' || state === 'CONFLICT' || state === 'UNPAIRED' || state === 'UNLAUNCHED') {
+    botState = 'disconnected';
+    disconnectedAt = Date.now();
+    scheduleReconnect('change_state_' + state);
+  }
 });
 
 // ── Обработка сообщений ────────────────────────────────────────────────────
@@ -1246,4 +1353,25 @@ function initializeClientWithRetry(attempt) {
   });
 }
 
+function startConnectionWatchdog() {
+  if (watchdogInterval) clearInterval(watchdogInterval);
+  watchdogInterval = setInterval(function() {
+    if (!disconnectedAt) return;
+    var disconnectedForMs = Date.now() - disconnectedAt;
+    if (disconnectedForMs < WATCHDOG_MAX_DISCONNECTED_MS) return;
+    console.error('🛑 Бот отключён слишком долго (' + Math.round(disconnectedForMs / 1000) + ' сек). Перезапускаю процесс для self-healing.');
+    process.exit(1);
+  }, WATCHDOG_INTERVAL_MS);
+}
+
+process.on('unhandledRejection', function(err) {
+  console.error('❌ unhandledRejection:', err && err.stack ? err.stack : err);
+});
+
+process.on('uncaughtException', function(err) {
+  console.error('❌ uncaughtException:', err && err.stack ? err.stack : err);
+  process.exit(1);
+});
+
+startConnectionWatchdog();
 initializeClientWithRetry();

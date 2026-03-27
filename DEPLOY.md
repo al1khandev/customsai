@@ -31,6 +31,47 @@ docker compose up -d --build
 
 После этого бот будет работать 24/7, даже когда ваш компьютер выключен.
 
+## Как сделать полностью автономно (без вашего участия)
+
+1. Включите автозапуск Docker после перезагрузки VPS:
+
+```bash
+sudo systemctl enable docker
+```
+
+2. Запускайте сервис только через Compose (уже настроен `restart: unless-stopped`):
+
+```bash
+docker compose up -d
+```
+
+3. В проекте уже включён self-healing:
+   - автопереподключение WhatsApp после обрыва;
+   - watchdog, который перезапускает процесс при долгом disconnect;
+   - Docker healthcheck + рестарт контейнера.
+
+4. Делайте ежедневный бэкап persistent-данных (`/data` volume), чтобы не потерять сессию и PDF:
+
+```bash
+mkdir -p /opt/customsai-backups
+docker run --rm \
+  -v customsai_customsai_data:/from \
+  -v /opt/customsai-backups:/to \
+  alpine sh -c "tar czf /to/customsai-$(date +%F).tar.gz -C /from ."
+```
+
+5. Добавьте cron на ежедневный бэкап (пример на 03:30):
+
+```bash
+crontab -e
+```
+
+```cron
+30 3 * * * docker run --rm -v customsai_customsai_data:/from -v /opt/customsai-backups:/to alpine sh -c "tar czf /to/customsai-$(date +\%F).tar.gz -C /from ."
+```
+
+6. (Опционально) Подключите мониторинг (Uptime Kuma / Better Stack) на `/health`, чтобы получать алерты при падениях.
+
 ## Важное про ТН ВЭД
 
 - Код больше не берётся из локальной базы и не генерируется ИИ.
