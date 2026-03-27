@@ -1,6 +1,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const TelegramBot = require('node-telegram-bot-api');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const https = require('https');
@@ -16,6 +17,10 @@ const SETTINGS_FILE = path.resolve(process.env.SETTINGS_FILE || path.join(DATA_D
 const KEDEN_TNVED_URL = process.env.KEDEN_TNVED_URL || 'https://keden.kz/tnved';
 const WHATSAPP_CLIENT_ID = process.env.WHATSAPP_CLIENT_ID || 'customsai';
 const WHATSAPP_SESSION_DIR = path.join(AUTH_DIR, 'session-' + WHATSAPP_CLIENT_ID);
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+
+var telegramBot = null;
+var telegramConnected = false;
 
 function ensureDirSync(dirPath) {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -168,7 +173,9 @@ var webServer = http.createServer(function(req, res) {
       keyword: KEYWORD_DYNAMIC,
       stats: statsCount,
       msg_limit: MSG_LIMIT,
-      hasQR: currentQR ? true : false
+      hasQR: currentQR ? true : false,
+      telegram_connected: telegramConnected,
+      telegram_enabled: TELEGRAM_BOT_TOKEN ? true : false
     }));
 
   } else if (url === '/qr.png' && currentQR) {
@@ -1351,6 +1358,73 @@ function initializeClientWithRetry(attempt) {
     console.error('❌ Ошибка запуска WhatsApp:', message);
     process.exit(1);
   });
+
+  // Инициализировать Telegram если token предоставлен
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_BOT_TOKEN.length > 0) {
+    initializeTelegramBot();
+  }
+}
+
+function initializeTelegramBot() {
+  try {
+    telegramBot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+    
+    telegramBot.on('message', async function(msg) {
+      var chatId = msg.chat.id;
+      var text = msg.text || '';
+      
+      if (!text.trim()) return;
+      
+      console.log('💬 Telegram сообщение от ' + (msg.from.username || msg.from.first_name) + ': ' + text);
+      
+      if (text.includes(KEYWORD_DYNAMIC) || text.length > 50) {
+        try {
+          var invoiceData = { telegram_chat_id: chatId, telegram_user: msg.from.first_name };
+          var parsed = await analyzeChat(text, invoiceData);
+          
+          if (!parsed.exchange_rate || parsed.exchange_rate === '0') {
+            var rate = await getExchangeRate(parsed.currency || 'USD');
+            if (rate) parsed.exchange_rate = rate;
+          }
+          
+          await enrichGoodsWithOfficialTnved(parsed.goods || []);
+          
+          var validation = validateDeclarationData(parsed);
+          if (!validation.valid) {
+            var errorMsg = '❌ Не хватает данных:\n\n';
+            validation.required.forEach(function(field) { errorMsg += '• ' + field + '\n'; });
+            telegramBot.sendMessage(chatId, errorMsg);
+            return;
+          }
+          
+          telegramBot.sendMessage(chatId, '⏳ Генерирую PDF...');
+          var pdfPath = await generateDTPDF(parsed);
+          var pdfData = fs.readFileSync(pdfPath);
+          
+          await telegramBot.sendDocument(chatId, pdfData, { filename: 'declaration.pdf' });
+          console.log('✅ PDF отправлен в Telegram');
+          
+          fs.unlinkSync(pdfPath);
+        } catch(e) {
+          console.error('Ошибка обработки Telegram сообщения:', e.message);
+          telegramBot.sendMessage(chatId, '❌ Ошибка: ' + e.message);
+        }
+      } else {
+        telegramBot.sendMessage(chatId, '📝 Напишите больше информации о товарах или используйте кодовое слово "' + KEYWORD_DYNAMIC + '"');
+      }
+    });
+    
+    telegramBot.on('error', function(err) {
+      console.error('❌ Ошибка Telegram бота:', err);
+      telegramConnected = false;
+    });
+    
+    console.log('✅ Telegram бот инициализирован');
+    telegramConnected = true;
+  } catch(e) {
+    console.error('❌ Не удалось запустить Telegram бота:', e.message);
+    telegramConnected = false;
+  }
 }
 
 function startConnectionWatchdog() {
