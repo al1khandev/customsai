@@ -470,7 +470,7 @@ var webServer = http.createServer(function(req, res) {
           message: 'Номер сохранён. Отсканируйте QR-код на вашем телефоне для подтверждения.'
         }));
       } catch(e) { 
-        res.writeHead(400); 
+        res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: e.message })); 
       }
     });

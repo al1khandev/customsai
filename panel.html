@@ -763,11 +763,22 @@ function linkPhoneNumber() {
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({phone: phone})
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (!r.ok) {
+      return r.text().then(function(text) {
+        try {
+          return JSON.parse(text);
+        } catch(e) {
+          return { ok: false, error: 'Ошибка сервера: ' + r.status };
+        }
+      });
+    }
+    return r.json();
+  })
   .then(function(d) {
-    if (d.ok) {
+    if (d && d.ok) {
       msgEl.style.color = 'var(--green)';
-      msgEl.textContent = '✅ ' + d.message;
+      msgEl.textContent = '✅ ' + (d.message || 'Номер сохранён');
       phoneInput.value = '';
       setTimeout(function() {
         togglePhoneForm();
@@ -775,12 +786,12 @@ function linkPhoneNumber() {
       }, 2000);
     } else {
       msgEl.style.color = 'var(--red)';
-      msgEl.textContent = '❌ ' + (d.error || 'Ошибка');
+      msgEl.textContent = '❌ ' + ((d && d.error) || 'Неизвестная ошибка');
     }
   })
   .catch(function(e) {
     msgEl.style.color = 'var(--red)';
-    msgEl.textContent = '❌ Ошибка: ' + e.message;
+    msgEl.textContent = '❌ Ошибка подключения: ' + e.message;
   });
 }
 
