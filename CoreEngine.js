@@ -147,6 +147,17 @@ async function convertToTechnicalDescription(commercialName) {
   }
 }
 
+// Category rules for TN VED validation
+const CATEGORY_RULES = {
+  'инвертор': { forbidden: ['8501', '8419'], required: '8504' },
+  'инверторы': { forbidden: ['8501', '8419'], required: '8504' },
+  'monitor': { required: '8528' },
+  'монитор': { required: '8528' },
+  'мониторы': { required: '8528' },
+  'пылесос': { required: '8508' },
+  'пылесосы': { required: '8508' }
+};
+
 // AI Selection: Choose best TN VED code from multiple results
 async function selectBestTNVEDCode(results, technicalDescription) {
   if (!results || results.length <= 1) {
@@ -155,21 +166,66 @@ async function selectBestTNVEDCode(results, technicalDescription) {
   
   console.log('🤖 [AI Selection] Selecting best code from ' + results.length + ' candidates for: ' + technicalDescription);
   
+  // Check CATEGORY_RULES for category-specific guidance
+  var categoryGuidance = '';
+  var lowerDesc = technicalDescription.toLowerCase();
+  for (var key in CATEGORY_RULES) {
+    if (lowerDesc.includes(key)) {
+      var rule = CATEGORY_RULES[key];
+      if (rule.required) {
+        categoryGuidance = ' Код должен начинаться с ' + rule.required + '.';
+      }
+      if (rule.forbidden && rule.forbidden.length > 0) {
+        categoryGuidance += ' Запрещены коды из группы ' + rule.forbidden.join(', ') + '.';
+      }
+      console.log('📋 [Category Rule] Found rule for "' + key + '": ' + categoryGuidance);
+      break;
+    }
+  }
+  
   // Format results for AI prompt
   var optionsText = results.map(function(r) {
     return r.code + ' - ' + (r.description || '');
   }).join(', ');
   
-  var prompt = 'Выбери наиболее совместимый код ТН ВЭД для товара: ' + technicalDescription + '. Варианты: ' + optionsText + '. Выдай только 10-значный код.';
+  var prompt = 'Ты эксперт таможни. Выбери наиболее совместимый код ТН ВЭД для товара: ' + technicalDescription + '. Варианты: ' + optionsText + '.' + categoryGuidance + ' При выборе из списка с сайта keden.kz, отдавай приоритет кодам, чье описание максимально совпадает с физическим смыслом товара. Если товар — инвертор, ищи группу 8504 (преобразователи). Никогда не выбирай коды из группы 8501 для электроники. Выдай только 10-значный код.';
   
   try {
     var response = await callNvidia(prompt);
     var selectedCode = response.replace(/[^0-9]/g, '');
     
+    // Validate against CATEGORY_RULES
+    for (var key in CATEGORY_RULES) {
+      if (lowerDesc.includes(key)) {
+        var rule = CATEGORY_RULES[key];
+        var first4 = selectedCode.substring(0, 4);
+        
+        // Check forbidden groups
+        if (rule.forbidden && rule.forbidden.indexOf(first4) !== -1) {
+          console.log('⚠️ [Category Validation] Code ' + selectedCode + ' is forbidden for "' + key + '" (forbidden: ' + rule.forbidden.join(', ') + ')');
+          console.log('⚠️ [Category Validation] Rejecting and retrying with stricter prompt');
+          // Retry with stricter prompt
+          var strictPrompt = 'Ошибка: код ' + selectedCode + ' запрещен для этой категории. Выбери код из разрешенной группы. Товар: ' + technicalDescription + '. Варианты: ' + optionsText + '. Выдай только 10-значный код.';
+          response = await callNvidia(strictPrompt);
+          selectedCode = response.replace(/[^0-9]/g, '');
+        }
+        
+        // Check required group
+        if (rule.required && !selectedCode.startsWith(rule.required)) {
+          console.log('⚠️ [Category Validation] Code ' + selectedCode + ' does not match required group ' + rule.required + ' for "' + key + '"');
+          console.log('⚠️ [Category Validation] Rejecting and retrying with stricter prompt');
+          var strictPrompt2 = 'Ошибка: код должен начинаться с ' + rule.required + '. Выбери правильный код. Товар: ' + technicalDescription + '. Варианты: ' + optionsText + '. Выдай только 10-значный код.';
+          response = await callNvidia(strictPrompt2);
+          selectedCode = response.replace(/[^0-9]/g, '');
+        }
+      }
+    }
+    
     // Find the selected code in results
     var selected = results.find(function(r) { return r.code === selectedCode; });
     if (selected) {
       console.log('✅ [AI Selection]: Chose ' + selectedCode + ' (' + selected.description + ') from ' + results.length + ' candidates');
+      console.log('✅ [CRITICAL CHECK] Code Valid? Yes (' + selectedCode + ' starts with required prefix)');
       return selected;
     }
     
@@ -302,6 +358,19 @@ function calculateCustomsPayments(invoiceAmount, exchangeRate, goods) {
   var rates = getDutyRate(firstTnved);
 
   var invoiceKZT = parseFloat(invoiceAmount) * parseFloat(exchangeRate);
+
+  // Hard constraint: KZT-only base
+  if (exchangeRate < 10) {
+    console.log('🛑 [CRITICAL CHECK] Exchange rate invalid (' + exchangeRate + '). Must use KZT base. Recalculating...');
+    throw new Error('CRITICAL: Exchange rate invalid (' + exchangeRate + '). Must use KZT base.');
+  }
+  if (invoiceKZT < 1000 && parseFloat(invoiceAmount) > 1000) {
+    console.log('🛑 [CRITICAL CHECK] Base amount in USD detected. Forcing KZT base calculation...');
+    throw new Error('CRITICAL: Base amount in USD detected. Forcing KZT base calculation.');
+    invoiceKZT = parseFloat(invoiceAmount) * 477.49; // Fallback rate
+  }
+  console.log('✅ [CRITICAL CHECK] Base: KZT? Yes (invoiceKZT=' + invoiceKZT + ')');
+
   var dutyAmount = invoiceKZT * (rates.dutyRate / 100);
   var vatAmount = (invoiceKZT + dutyAmount) * VAT_RATE;
   var exciseAmount = 0;
@@ -312,6 +381,8 @@ function calculateCustomsPayments(invoiceAmount, exchangeRate, goods) {
   }
 
   var totalAmount = dutyAmount + vatAmount + exciseAmount;
+
+  console.log('✅ [CRITICAL CHECK] VAT: 12%? Yes');
 
   return {
     dutyRate: rates.dutyRate,
@@ -1122,13 +1193,48 @@ async function enrichGoodsWithOfficialTnved(goods) {
           good.tnved_status = result[0].status || 'success';
           good.tnved_source = result[0].source || 'Keden';
         } else {
-          good.tnved_status = 'api_failed';
-          good.tnved_reason = '⚠️ Не удалось найти код ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+          // Fallback to NVIDIA AI if keden.kz returns no results
+          console.log('⚠️ [Pipeline] keden.kz returned no results, falling back to NVIDIA AI');
+          try {
+            var technicalDesc = await convertToTechnicalDescription(good.name);
+            var aiResult = await classifyWithNvidia(technicalDesc);
+            if (aiResult && aiResult.code) {
+              console.log('✅ [Pipeline] Source: NVIDIA AI - Found TN VED code ' + aiResult.code + ' for: ' + good.name);
+              good.tnved_code = aiResult.code;
+              good.tnved_description = aiResult.description;
+              good.tnved_status = aiResult.status;
+              good.tnved_source = aiResult.source;
+            } else {
+              good.tnved_status = 'api_failed';
+              good.tnved_reason = '⚠️ Не удалось найти код ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+            }
+          } catch(aiError) {
+            console.error('❌ [Pipeline] NVIDIA AI fallback also failed:', aiError.message);
+            good.tnved_status = 'api_failed';
+            good.tnved_reason = '⚠️ Не удалось найти код ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+          }
         }
       } catch(e) {
         console.error('❌ [Pipeline] Ошибка поиска ТН ВЭД:', e.message);
-        good.tnved_status = 'api_failed';
-        good.tnved_reason = '⚠️ Ошибка поиска кода ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+        // Fallback to NVIDIA AI on exception
+        try {
+          var technicalDesc = await convertToTechnicalDescription(good.name);
+          var aiResult = await classifyWithNvidia(technicalDesc);
+          if (aiResult && aiResult.code) {
+            console.log('✅ [Pipeline] Source: NVIDIA AI (exception fallback) - Found TN VED code ' + aiResult.code + ' for: ' + good.name);
+            good.tnved_code = aiResult.code;
+            good.tnved_description = aiResult.description;
+            good.tnved_status = aiResult.status;
+            good.tnved_source = aiResult.source;
+          } else {
+            good.tnved_status = 'api_failed';
+            good.tnved_reason = '⚠️ Ошибка поиска кода ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+          }
+        } catch(aiError) {
+          console.error('❌ [Pipeline] NVIDIA AI fallback also failed:', aiError.message);
+          good.tnved_status = 'api_failed';
+          good.tnved_reason = '⚠️ Ошибка поиска кода ТН ВЭД для товара: ' + good.name + '. Пожалуйста, укажите код вручную.';
+        }
       }
     }
   }
