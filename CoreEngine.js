@@ -12,6 +12,7 @@ const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
 // Local TN VED dictionary for priority goods (no spaces)
 const CONST_TNVED = {
+  // Existing
   'монитор': '8528521000',
   'monitor': '8528521000',
   'lcd': '8528521000',
@@ -21,7 +22,53 @@ const CONST_TNVED = {
   'printer': '8443310000',
   'пылесос': '8508110000',
   'vacuum': '8508110000',
-  'robot': '8508110000'
+  'robot': '8508110000',
+  // New additions - Power electronics
+  'инвертор': '8504400000',
+  'inverter': '8504400000',
+  'солнечный инвертор': '8504400000',
+  'преобразователь': '8504400000',
+  'конвертер': '8504400000',
+  'converter': '8504400000',
+  // Communication devices
+  'телефон': '8517120000',
+  'телефоны': '8517120000',
+  'смартфон': '8517120000',
+  'smartphone': '8517120000',
+  'телефонный аппарат': '8517120000',
+  // Computing devices
+  'ноутбук': '8471300000',
+  'laptop': '8471300000',
+  'ноут': '8471300000',
+  'компьютер': '8471300000',
+  'computer': '8471300000',
+  'планшет': '8471300000',
+  'tablet': '8471300000',
+  // Imaging devices
+  'камера': '8525800000',
+  'camera': '8525800000',
+  'видеокамера': '8525800000',
+  'webcam': '8525800000',
+  // Audio devices
+  'наушники': '8518300000',
+  'headphones': '8518300000',
+  'гарнитура': '8518300000',
+  'микрофон': '8518300000',
+  'microphone': '8518300000',
+  'колонки': '8518300000',
+  'динамик': '8518300000',
+  'speaker': '8518300000',
+  // Input devices
+  'клавиатура': '8471300000',
+  'keyboard': '8471300000',
+  'мышь': '8471300000',
+  'mouse': '8471300000',
+  // Network devices
+  'роутер': '8517620000',
+  'router': '8517620000',
+  'маршрутизатор': '8517620000',
+  'модем': '8517620000',
+  'modem': '8517620000'
 };
 
 // Keyword for triggering declaration
@@ -133,7 +180,7 @@ function callNvidia(prompt) {
 // AI Pre-Analysis: Convert commercial name to technical description
 async function convertToTechnicalDescription(commercialName) {
   console.log('🤖 [AI Analysis] Converting commercial name to technical description: ' + commercialName);
-  var prompt = 'Преобразуй коммерческое название "' + commercialName + '" в краткое техническое описание для таможенного реестра (1-3 слова). Например: "Xiaomi Mi Monitor" -> "Монитор компьютерный". Выдай только описание.';
+  var prompt = 'Ты эксперт таможенной классификации. Преобразуй коммерческое название "' + commercialName + '" в техническое описание для таможенного реестра.\n\nПравила:\n1. Укажи основную функцию устройства (преобразователь, дисплей, накопитель, и т.д.)\n2. Укажи тип энергии (солнечная, электрическая, сетевая)\n3. Укажи область применения (бытовая, промышленная, коммерческая)\n4. Укажи ключевые характеристики (напряжение, мощность, если известны)\n5. НЕ включай названия брендов (Xiaomi, Samsung, etc.)\n6. НЕ включай модельные номера\n\nПримеры:\n- "Сетевой солнечный инвертор Sungrow SG110CX" -> "Статический преобразователь для фотоэлектрических систем"\n- "Xiaomi Mi Robot Vacuum-Mop 2" -> "Бытовой пылесос робот"\n- "Samsung Monitor 27" -> "Монитор компьютерный LCD"\n\nВыдай только техническое описание (2-5 слов на русском).';
   
   try {
     var response = await callNvidia(prompt);
@@ -149,14 +196,234 @@ async function convertToTechnicalDescription(commercialName) {
 
 // Category rules for TN VED validation
 const CATEGORY_RULES = {
+  // Power electronics
   'инвертор': { forbidden: ['8501', '8419'], required: '8504' },
   'инверторы': { forbidden: ['8501', '8419'], required: '8504' },
+  'inverter': { forbidden: ['8501', '8419'], required: '8504' },
+  'преобразователь': { forbidden: ['8501', '8419'], required: '8504' },
+  'конвертер': { forbidden: ['8501', '8419'], required: '8504' },
+  'converter': { forbidden: ['8501', '8419'], required: '8504' },
+  // Display devices
   'monitor': { required: '8528' },
   'монитор': { required: '8528' },
   'мониторы': { required: '8528' },
+  'lcd': { required: '8528' },
+  'дисплей': { required: '8528' },
+  'display': { required: '8528' },
+  // Cleaning appliances
   'пылесос': { required: '8508' },
-  'пылесосы': { required: '8508' }
+  'пылесосы': { required: '8508' },
+  'vacuum': { required: '8508' },
+  'robot': { required: '8508' },
+  // Communication devices
+  'телефон': { required: '8517' },
+  'телефоны': { required: '8517' },
+  'смартфон': { required: '8517' },
+  'smartphone': { required: '8517' },
+  'телефонный аппарат': { required: '8517' },
+  // Computing devices
+  'ноутбук': { required: '8471' },
+  'laptop': { required: '8471' },
+  'компьютер': { required: '8471' },
+  'computer': { required: '8471' },
+  'планшет': { required: '8471' },
+  'tablet': { required: '8471' },
+  // Imaging devices
+  'камера': { required: '8525' },
+  'camera': { required: '8525' },
+  'видеокамера': { required: '8525' },
+  'webcam': { required: '8525' },
+  // Audio devices
+  'наушники': { required: '8518' },
+  'headphones': { required: '8518' },
+  'гарнитура': { required: '8518' },
+  'микрофон': { required: '8518' },
+  'microphone': { required: '8518' },
+  'колонки': { required: '8518' },
+  'динамик': { required: '8518' },
+  'speaker': { required: '8518' },
+  // Input devices
+  'клавиатура': { required: '8471' },
+  'keyboard': { required: '8471' },
+  'мышь': { required: '8471' },
+  'mouse': { required: '8471' },
+  // Network devices
+  'роутер': { required: '8517' },
+  'router': { required: '8517' },
+  'маршрутизатор': { required: '8517' },
+  'модем': { required: '8517' },
+  'modem': { required: '8517' },
+  // Solar-specific rule
+  'солнечный': { forbidden: ['8419'] } // Prevent solar water heater codes for electronics
 };
+
+// Confidence scoring for TN VED validation
+function validateTNVEDCode(code, productName, description, source) {
+  var confidence = 0;
+  var issues = [];
+
+  // Check 0: Forbid generic codes ending in 5+ zeros (NEW)
+  if (code.endsWith('00000')) {
+    issues.push('Code ' + code + ' is too generic (ends with 5+ zeros). Need specific 10-digit code.');
+    console.log('⚠️ [Validation] Generic code detected: ' + code);
+  }
+
+  // Check 1: CATEGORY_RULES validation (30 points)
+  var first4 = code.substring(0, 4);
+  var lowerName = productName ? productName.toLowerCase() : '';
+  for (var key in CATEGORY_RULES) {
+    if (lowerName.includes(key)) {
+      var rule = CATEGORY_RULES[key];
+      if (rule.forbidden && rule.forbidden.indexOf(first4) !== -1) {
+        issues.push('Code ' + code + ' is forbidden for "' + key + '" (forbidden: ' + rule.forbidden.join(', ') + ')');
+      }
+      if (rule.required && !code.startsWith(rule.required)) {
+        issues.push('Code ' + code + ' does not match required group ' + rule.required + ' for "' + key + '"');
+      }
+      if (!issues.length) {
+        confidence += 30;
+        console.log('✅ [Validation] Code ' + code + ' passes CATEGORY_RULES for "' + key + '"');
+      }
+      break;
+    }
+  }
+
+  // Check 2: Code format validation (20 points)
+  if (code.length === 10 && /^\d{10}$/.test(code)) {
+    confidence += 20;
+  } else {
+    issues.push('Code format invalid: must be 10 digits');
+  }
+
+  // Check 3: Description relevance (20 points)
+  if (description && description.length > 10) {
+    confidence += 20;
+  } else {
+    issues.push('Missing or too short description');
+  }
+
+  // Check 4: Source reliability (30 points)
+  if (source === 'Local') confidence += 30;
+  else if (source === 'Keden') confidence += 25;
+  else if (source === 'NVIDIA AI') confidence += 15;
+
+  console.log('📊 [Validation] Code ' + code + ' - Confidence: ' + confidence + '%, Issues: ' + (issues.length || 'none'));
+
+  return { confidence: confidence, issues: issues, valid: issues.length === 0 };
+}
+
+// Extract product characteristics (power, voltage, application) from product name
+function extractCharacteristics(productName) {
+  var characteristics = {
+    power: null,
+    voltage: null,
+    application: null
+  };
+  
+  var lowerName = productName.toLowerCase();
+  
+  // Extract power (e.g., 1100W, 1.1kW, 1100 Вт)
+  var powerMatch = productName.match(/(\d+(?:\.\d+)?)\s*(?:W|кВт|kW|KW|Вт)/i);
+  if (powerMatch) characteristics.power = powerMatch[1];
+  
+  // Extract voltage (e.g., 220V, 380V, 220 В)
+  var voltageMatch = productName.match(/(\d+)\s*V/i);
+  if (voltageMatch) characteristics.voltage = voltageMatch[1];
+  
+  // Determine application
+  if (lowerName.includes('солнечный') || lowerName.includes('solar')) {
+    characteristics.application = 'solar';
+  } else if (lowerName.includes('бытовой') || lowerName.includes('домашний')) {
+    characteristics.application = 'household';
+  } else if (lowerName.includes('промышлен') || lowerName.includes('industrial')) {
+    characteristics.application = 'industrial';
+  }
+  
+  console.log('🔧 [Characteristic Extraction] Power: ' + (characteristics.power || 'N/A') + ', Voltage: ' + (characteristics.voltage || 'N/A') + ', Application: ' + (characteristics.application || 'N/A'));
+  
+  return characteristics;
+}
+
+// Validate code exists in KGD database
+async function validateCodeExistsInKGD(code) {
+  try {
+    var apiUrl = 'https://keden.kgd.gov.kz/api/v1/cnfea/cnfea/es/by-code';
+    var response = await fetch(apiUrl + '?code=' + code);
+    var data = await response.json();
+    
+    if (data.error || !data.content || data.content.length === 0) {
+      console.log('⚠️ [KGD Validation] Code ' + code + ' not found in KGD database');
+      return false;
+    }
+    
+    console.log('✅ [KGD Validation] Code ' + code + ' exists in KGD database');
+    return true;
+  } catch(e) {
+    console.error('❌ [KGD Validation] Error:', e.message);
+    return false;
+  }
+}
+
+// Vertical search: expand prefix to find specific codes
+async function verticalSearch(prefix, technicalDescription) {
+  console.log('🔍 [Vertical Search] Expanding prefix: ' + prefix);
+  
+  try {
+    // Query KGD API for all codes starting with prefix
+    var apiUrl = 'https://keden.kgd.gov.kz/api/v1/cnfea/cnfea/es/by-name';
+    var response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: prefix, size: 100 })
+    });
+    
+    if (!response.ok) {
+      console.log('⚠️ [Vertical Search] API returned status: ' + response.status);
+      return null;
+    }
+    
+    var data = await response.json();
+    
+    if (!data.content || data.content.length === 0) {
+      console.log('⚠️ [Vertical Search] No results found for prefix: ' + prefix);
+      return null;
+    }
+    
+    // Filter to 10-digit codes only, exclude generic codes
+    var specificCodes = data.content.filter(function(c) {
+      var code = c.code || c.tnved || c.tnvedCode || c.kod;
+      return code && code.length === 10 && !code.endsWith('00000');
+    }).map(function(c) {
+      return {
+        code: c.code || c.tnved || c.tnvedCode || c.kod,
+        description: c.description || c.title || c.name
+      };
+    });
+    
+    console.log('🔍 [Vertical Search] Found ' + specificCodes.length + ' specific codes for prefix ' + prefix);
+    
+    if (specificCodes.length === 0) {
+      console.log('⚠️ [Vertical Search] No specific codes found (all are generic)');
+      return null;
+    }
+    
+    // Use AI to select best code
+    var bestCode = await selectBestTNVEDCode(specificCodes, technicalDescription);
+    
+    if (bestCode) {
+      console.log('✅ [Vertical Search] Selected: ' + bestCode.code + ' - ' + bestCode.description);
+    }
+    
+    return bestCode;
+    
+  } catch(e) {
+    console.error('❌ [Vertical Search] Error:', e.message);
+    return null;
+  }
+}
 
 // AI Selection: Choose best TN VED code from multiple results
 async function selectBestTNVEDCode(results, technicalDescription) {
@@ -193,6 +460,15 @@ async function selectBestTNVEDCode(results, technicalDescription) {
   try {
     var response = await callNvidia(prompt);
     var selectedCode = response.replace(/[^0-9]/g, '');
+    
+    // Validate against generic codes (reject codes ending in 5+ zeros)
+    if (selectedCode.endsWith('00000')) {
+      console.log('⚠️ [Generic Code Validation] Code ' + selectedCode + ' is too generic (ends with 5+ zeros)');
+      console.log('⚠️ [Generic Code Validation] Rejecting and retrying with stricter prompt');
+      var strictPrompt = 'Ошибка: код ' + selectedCode + ' слишком общий (заканчивается на 5+ нулей). Нужен конкретный 10-значный код из базы КГД. Выбери конкретный код. Товар: ' + technicalDescription + '. Варианты: ' + optionsText + '. Выдай только 10-значный код.';
+      response = await callNvidia(strictPrompt);
+      selectedCode = response.replace(/[^0-9]/g, '');
+    }
     
     // Validate against CATEGORY_RULES
     for (var key in CATEGORY_RULES) {
@@ -625,10 +901,49 @@ async function handleAskCommand(question) {
   }
 }
 
+// Preprocess search query to remove brand names and focus on product type
+function preprocessSearchQuery(goodsName) {
+  var query = goodsName.toLowerCase();
+  
+  // Common brand names to remove (both English and Russian)
+  var brands = [
+    'xiaomi', 'samsung', 'apple', 'sony', 'lg', 'philips', 'panasonic',
+    'bosch', 'dell', 'hp', 'lenovo', 'asus', 'acer', 'msi',
+    'nokia', 'motorola', 'huawei', 'oppo', 'vivo', 'oneplus',
+    'samsung', 'lg', 'sony', 'philips', 'panasonic', 'bosch',
+    'dell', 'hp', 'lenovo', 'asus', 'acer', 'msi',
+    'sungrow', 'huawei', 'zte', 'byd', 'longi', 'jinko',
+    'trina', 'ja solar', 'canadian solar', 'first solar'
+  ];
+  
+  // Remove brand names
+  for (var i = 0; i < brands.length; i++) {
+    var brandRegex = new RegExp('\\b' + brands[i] + '\\b', 'gi');
+    query = query.replace(brandRegex, '');
+  }
+  
+  // Remove model numbers (patterns like SG110CX, MI-123, etc.)
+  query = query.replace(/\b[A-Z]{2,}\d{3,}[A-Z]*\d*\b/g, '');
+  query = query.replace(/\b[A-Z]{1,2}\d{3,}\b/g, '');
+  
+  // Clean up extra spaces
+  query = query.replace(/\s+/g, ' ').trim();
+  
+  // If query is too short after cleaning, use original
+  if (query.length < 3) {
+    console.log('⚠️ [Query Preprocessing] Query too short after cleaning, using original');
+    return goodsName;
+  }
+  
+  console.log('🔧 [Query Preprocessing] Original: "' + goodsName + '" → Cleaned: "' + query + '"');
+  return query;
+}
+
 // TN VED search with multi-level query variations and intelligent parsing
 // Implements robust search algorithm to prevent hallucination of codes
 async function searchKeden(goodsName) {
-  console.log('🔍 Поиск ТН ВЭД через Python API: ' + goodsName);
+  var cleanedQuery = preprocessSearchQuery(goodsName);
+  console.log('🔍 Поиск ТН ВЭД через Python API: ' + cleanedQuery);
   
   try {
     // Вызываем Python API вместо прямого запроса к keden.kz
@@ -638,7 +953,7 @@ async function searchKeden(goodsName) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        description: goodsName
+        description: cleanedQuery
       })
     });
     
@@ -1187,8 +1502,29 @@ async function enrichGoodsWithOfficialTnved(goods) {
       try {
         var result = await searchKeden(good.name);
         if (result && result.length > 0 && result[0].code) {
-          console.log('✅ [Pipeline] Source: ' + (result[0].source || 'Keden') + ' - Found TN VED code ' + result[0].code + ' for: ' + good.name);
-          good.tnved_code = result[0].code;
+          var code = result[0].code;
+          
+          // Check if code is generic (ends with 5+ zeros) and try vertical search
+          if (code.endsWith('00000')) {
+            console.log('⚠️ [Pipeline] Generic code detected (' + code + '), attempting vertical search...');
+            var technicalDesc = await convertToTechnicalDescription(good.name);
+            var prefix = code.substring(0, 4); // Use first 4 digits as prefix
+            var verticalResult = await verticalSearch(prefix, technicalDesc);
+            
+            if (verticalResult && verticalResult.code) {
+              console.log('✅ [Pipeline] Source: Vertical Search - Found specific TN VED code ' + verticalResult.code + ' for: ' + good.name);
+              good.tnved_code = verticalResult.code;
+              good.tnved_description = verticalResult.description;
+              good.tnved_status = 'success';
+              good.tnved_source = 'Vertical Search';
+              continue;
+            } else {
+              console.log('⚠️ [Pipeline] Vertical search failed, using generic code as fallback');
+            }
+          }
+          
+          console.log('✅ [Pipeline] Source: ' + (result[0].source || 'Keden') + ' - Found TN VED code ' + code + ' for: ' + good.name);
+          good.tnved_code = code;
           good.tnved_description = result[0].description;
           good.tnved_status = result[0].status || 'success';
           good.tnved_source = result[0].source || 'Keden';
@@ -1253,6 +1589,10 @@ module.exports = {
   enrichGoodsWithOfficialTnved,
   searchKeden,
   validateData,
+  validateTNVEDCode,
   convertToTechnicalDescription,
-  selectBestTNVEDCode
+  selectBestTNVEDCode,
+  extractCharacteristics,
+  validateCodeExistsInKGD,
+  verticalSearch
 };
