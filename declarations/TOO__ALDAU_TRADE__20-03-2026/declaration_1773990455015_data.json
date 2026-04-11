@@ -1,0 +1,55 @@
+{
+  "declarant_name": "TOO \"ALDAU TRADE\"",
+  "declarant_inn": "241040012345",
+  "declarant_address": "г. Алматы, ул. Сейфуллина 506, офис 12",
+  "exporter_name": "QINGDAO SUNRISE TRADE CO., LTD",
+  "exporter_country": "Китай",
+  "exporter_address": "г. Циндао, ул. Хайбо 88",
+  "delivery_terms": "CIP Алматы",
+  "currency": "USD",
+  "total_invoice_amount": "29,700",
+  "exchange_rate": "492.30",
+  "transport_type": "rail",
+  "transport_id": "TCKU7821045",
+  "border_crossing": "Алтынколь",
+  "gross_weight": "3,420",
+  "packages_count": "247",
+  "invoice_number": "SR-2026-0047",
+  "invoice_date": "10.02.2026",
+  "contract_number": "KZ-CN-2025-11",
+  "goods": [
+    {
+      "name": "Полоса алюминиевая для жалюзи шириной 25 мм",
+      "tnved": "7606100000",
+      "origin_country": "CN",
+      "gross_weight": "",
+      "net_weight": "",
+      "quantity": "85,000",
+      "unit": "метров",
+      "total_price": "12,750",
+      "customs_procedure": "4000"
+    },
+    {
+      "name": "Карниз алюминиевый для горизонтальных жалюзи",
+      "tnved": "3926901000",
+      "origin_country": "CN",
+      "gross_weight": "",
+      "net_weight": "",
+      "quantity": "3,200",
+      "unit": "штук",
+      "total_price": "9,600",
+      "customs_procedure": "4000"
+    },
+    {
+      "name": "Ткань для рулонных штор в рулонах",
+      "tnved": "5909000000",
+      "origin_country": "CN",
+      "gross_weight": "",
+      "net_weight": "",
+      "quantity": "420",
+      "unit": "метров",
+      "total_price": "7,350",
+      "customs_procedure": "4000"
+    }
+  ]
+}

@@ -5,156 +5,148 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CustomsAI</title>
 <style>
-:root{--bg:#0f1117;--card:#1a1d27;--card2:#21253a;--border:#2a2d3e;--green:#00d68f;--blue:#4d7cfe;--orange:#ffaa00;--red:#ff4757;--txt:#e8edf5;--txt2:#8891aa;--radius:14px}
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Arial,sans-serif}
-body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
+:root{--bg:#fafafa;--surface:#fff;--surface2:#f5f5f7;--border:#e5e5ea;--accent:#34C759;--blue:#0A84FF;--orange:#FF9500;--red:#FF3B30;--txt:#1d1d1d;--txt2:#6e6e73;--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI','SF Pro Display',Arial,sans-serif}
+body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px;-webkit-font-smoothing:antialiased}
 
 /* LAYOUT */
-.app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0}
-.main{flex:1;overflow-y:auto;padding:28px}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.navbar{width:100%;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:16px 48px;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.nav-left{display:flex;align-items:center;gap:32px}
+.nav-center{display:flex;gap:8px}
+.nav-right{display:flex;gap:16px;align-items:center}
+.sidebar{display:none}
+.main{flex:1;overflow-y:auto;padding:60px 20px;background:var(--bg);display:flex;flex-direction:column;align-items:center}
 
 /* LOGO */
-.logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
-.logo-name{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-0.5px}
-.logo-desc{font-size:12px;color:var(--txt2);margin-top:2px}
+.logo{display:none}
+.logo-name{font-size:24px;font-weight:700;color:var(--txt);letter-spacing:-0.6px}
+.logo-desc{font-size:13px;color:var(--txt2);margin-top:3px;font-weight:500}
 
 /* NAV */
-.nav-btn{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;color:var(--txt2);border-left:3px solid transparent;transition:all .15s;font-size:14px;border:none;background:none;width:100%;text-align:left}
-.nav-btn:hover{background:rgba(255,255,255,.04);color:var(--txt)}
-.nav-btn.active{color:var(--green);border-left-color:var(--green);background:rgba(0,214,143,.06)}
-.nav-icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.nav-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;color:var(--txt2);border:none;background:none;font-size:15px;transition:all .2s;border-radius:8px;border-left:none}
+.nav-btn:hover{color:var(--txt);background:rgba(0,0,0,.04)}
+.nav-btn.active{color:var(--accent);background:rgba(52,199,89,.08)}
+.nav-icon{font-size:18px;width:20px;text-align:center;flex-shrink:0}
 
 /* STATUS BADGE */
-.status-badge{margin:auto 16px 0;background:var(--card2);border-radius:12px;padding:14px;border:1px solid var(--border)}
-.status-row{display:flex;align-items:center;gap:8px}
-.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.dot.green{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
-.dot.orange{background:var(--orange)}
-.dot.red{background:var(--red)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.status-label{font-size:13px;font-weight:500}
-.status-phone{font-size:11px;color:var(--txt2);margin-top:4px;padding-left:17px}
+.status-badge{margin:auto 16px 0;background:var(--surface2);border-radius:var(--radius);padding:12px 16px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;margin:0}
 
 /* PAGES */
-.page{display:none}.page.active{display:block}
-.page-header{margin-bottom:24px}
-.page-title{font-size:24px;font-weight:700;margin-bottom:4px}
-.page-sub{font-size:14px;color:var(--txt2)}
+.page{display:none}.page.active{display:block;width:100%;max-width:880px;margin:0 auto}
+.page-header{margin-bottom:32px;text-align:center;display:none}
+.page-title{font-size:32px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px}
+.page-sub{font-size:16px;color:var(--txt2);font-weight:500}
 
 /* CARDS */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
-.stat-val{font-size:26px;font-weight:700;margin-bottom:4px}
-.stat-lbl{font-size:12px;color:var(--txt2)}
-.stat-card.green .stat-val{color:var(--green)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:32px;width:100%;max-width:880px;margin-left:auto;margin-right:auto}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-card:hover{border-color:rgba(0,0,0,.1);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.stat-val{font-size:28px;font-weight:700;margin-bottom:8px}
+.stat-lbl{font-size:12px;color:var(--txt2);font-weight:500;line-height:1.4}
+.stat-card.green .stat-val{color:var(--accent)}
 .stat-card.blue .stat-val{color:var(--blue)}
 .stat-card.orange .stat-val{color:var(--orange)}
 
 /* PANELS */
-.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px}
-.panel-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);width:100%;max-width:880px;margin-left:auto;margin-right:auto}
+.panel-title{font-size:17px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--txt);text-align:center;justify-content:center}
 
 /* FORM */
-.field{margin-bottom:16px}
-.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:6px;font-weight:500;letter-spacing:.3px}
-.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--txt);font-size:14px;padding:11px 14px;outline:none;transition:border .2s;font-family:inherit}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green)}
-.field textarea{resize:vertical;min-height:140px;line-height:1.6}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{margin-bottom:20px}
+.field label{display:block;font-size:13px;color:var(--txt);margin-bottom:8px;font-weight:600;letter-spacing:.2px}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:15px;padding:12px 16px;outline:none;transition:all .2s;font-family:inherit}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(52,199,89,.1)}
+.field textarea{resize:vertical;min-height:140px;line-height:1.5}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
-.btn-green{background:var(--green);color:#000}
-.btn-green:hover{background:#00ffaa;transform:translateY(-1px)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-green{background:var(--accent);color:#fff}
+.btn-green:hover{background:#31B83D;transform:translateY(-1px);box-shadow:0 4px 12px rgba(52,199,89,.3)}
+.btn-green:active{transform:translateY(0);box-shadow:0 2px 6px rgba(52,199,89,.2)}
 .btn-blue{background:var(--blue);color:#fff}
-.btn-blue:hover{opacity:.85}
-.btn-outline{background:transparent;color:var(--txt);border:1.5px solid var(--border)}
-.btn-outline:hover{border-color:var(--green);color:var(--green)}
-.btn-danger{background:rgba(255,71,87,.12);color:var(--red);border:1.5px solid rgba(255,71,87,.3)}
-.btn-danger:hover{background:rgba(255,71,87,.2)}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn-blue:hover{background:#0A7FDB;box-shadow:0 4px 12px rgba(10,132,255,.3)}
+.btn-outline{background:var(--surface2);color:var(--txt);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--surface);border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(255,59,48,.08);color:var(--red);border:1px solid rgba(255,59,48,.2)}
+.btn-danger:hover{background:rgba(255,59,48,.12)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
 
 /* QR */
-.qr-center{text-align:center;padding:10px 0 20px}
-.qr-frame{background:#fff;border-radius:16px;padding:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 30px rgba(0,214,143,.15)}
+.qr-center{text-align:center;padding:20px 0 32px}
+.qr-frame{background:#fff;border-radius:16px;padding:20px;display:inline-block;margin-bottom:24px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 .qr-frame img{display:block;width:250px;height:250px}
-.steps{background:var(--card2);border-radius:12px;padding:16px 20px;text-align:left;font-size:13px;color:var(--txt2);line-height:2.2;max-width:400px;margin:0 auto}
-.step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--green);color:#000;border-radius:50%;font-size:11px;font-weight:700;margin-right:8px}
+.steps{background:var(--surface2);border-radius:var(--radius);padding:20px 24px;text-align:left;font-size:14px;color:var(--txt2);line-height:2;max-width:420px;margin:0 auto}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--accent);color:#fff;border-radius:50%;font-size:12px;font-weight:700;margin-right:10px}
 
 /* CONNECTED */
-.connected-box{background:rgba(0,214,143,.06);border:1.5px solid rgba(0,214,143,.2);border-radius:14px;padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:20px}
-.connected-icon{font-size:36px}
-.connected-num{font-size:20px;font-weight:700;color:var(--green)}
-.connected-sub{font-size:13px;color:var(--txt2);margin-top:2px}
+.connected-box{background:rgba(52,199,89,.06);border:1px solid rgba(52,199,89,.15);border-radius:var(--radius);padding:24px;display:flex;align-items:center;gap:20px;margin-bottom:24px}
+.connected-icon{font-size:40px}
+.connected-num{font-size:24px;font-weight:700;color:var(--accent)}
+.connected-sub{font-size:14px;color:var(--txt2);margin-top:2px}
 
 /* TABLE */
 .table{width:100%;border-collapse:collapse}
-.table th{text-align:left;font-size:12px;color:var(--txt2);padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
-.table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
-.table tr:hover td{background:rgba(255,255,255,.02)}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
-.badge-green{background:rgba(0,214,143,.12);color:var(--green)}
-.badge-blue{background:rgba(77,124,254,.12);color:var(--blue)}
+.table th{text-align:left;font-size:13px;color:var(--txt2);padding:12px 14px;border-bottom:1px solid var(--border);font-weight:600}
+.table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle;color:var(--txt)}
+.table tr:hover td{background:rgba(0,0,0,.02)}
+.badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600}
+.badge-green{background:rgba(52,199,89,.12);color:var(--accent)}
+.badge-blue{background:rgba(10,132,255,.12);color:var(--blue)}
 
 /* ALERTS */
-.alert{padding:13px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.alert{padding:14px 18px;border-radius:8px;font-size:14px;margin-bottom:16px;display:none;border:1px solid}
 .alert.show{display:block}
-.alert-ok{background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);color:var(--green)}
-.alert-err{background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);color:var(--red)}
+.alert-ok{background:rgba(52,199,89,.08);border-color:rgba(52,199,89,.2);color:var(--accent)}
+.alert-err{background:rgba(255,59,48,.08);border-color:rgba(255,59,48,.2);color:var(--red)}
 
 /* SPINNER */
-.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* EDITOR */
-.goods-row{background:var(--card2);border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
-.goods-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.goods-num{font-size:12px;color:var(--txt2);font-weight:600}
-.del-good{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0 4px;opacity:.6}
+.goods-row{background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:12px;position:relative;border:1px solid var(--border)}
+.goods-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.goods-num{font-size:13px;color:var(--txt2);font-weight:600}
+.del-good{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0 4px;opacity:.6;transition:opacity .15s}
 .del-good:hover{opacity:1}
-.add-good{background:none;border:2px dashed var(--border);border-radius:10px;color:var(--txt2);padding:12px;width:100%;font-size:14px;cursor:pointer;transition:all .2s;font-family:inherit}
-.add-good:hover{border-color:var(--green);color:var(--green)}
+.add-good{background:none;border:2px dashed var(--border);border-radius:8px;color:var(--txt2);padding:14px;width:100%;font-size:15px;cursor:pointer;transition:all .2s;font-family:inherit}
+.add-good:hover{border-color:var(--accent);color:var(--accent);background:rgba(52,199,89,.04)}
 
 /* MEMORY BAR */
-.mem-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 4px}
-.mem-fill{height:100%;background:var(--green);border-radius:3px;width:80%}
-.mem-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--txt2)}
+.mem-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:12px 0 6px}
+.mem-fill{height:100%;background:var(--accent);border-radius:3px;width:80%}
+.mem-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--txt2)}
 
 /* DIVIDER */
-.divider{height:1px;background:var(--border);margin:20px 0}
+.divider{height:1px;background:var(--border);margin:24px 0}
 
 /* KEYWORD PILL */
-.kw-pill{display:inline-block;background:rgba(77,124,254,.12);color:var(--blue);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;margin-left:8px}
+.kw-pill{display:inline-block;background:rgba(10,132,255,.1);color:var(--blue);padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;margin-left:8px}
 
-@media(max-width:700px){.sidebar{display:none}.grid-2,.grid-3{grid-template-columns:1fr}}
+@media(max-width:700px){.sidebar{display:none}.grid-2,.grid-3{grid-template-columns:1fr}.main{padding:24px 16px}.navbar{padding:12px 20px}.nav-center{gap:4px}.page{max-width:100%!important}}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="logo">
+  <!-- TOP NAVBAR -->
+  <div class="navbar">
+    <div class="nav-left">
       <div class="logo-name">CustomsAI</div>
-      <div class="logo-desc">Таможенные декларации</div>
     </div>
-
-    <button class="nav-btn active" onclick="showPage('home')"><span class="nav-icon">🏠</span> Главная</button>
-    <button class="nav-btn" onclick="showPage('connect')"><span class="nav-icon">📱</span> Подключение</button>
-    <button class="nav-btn" onclick="showPage('manual')"><span class="nav-icon">✍️</span> Создать вручную</button>
-    <button class="nav-btn" onclick="showPage('tnved')"><span class="nav-icon">🔍</span> Поиск ТН ВЭД</button>
-    <button class="nav-btn" onclick="showPage('history')"><span class="nav-icon">📁</span> История</button>
-    <button class="nav-btn" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Настройки</button>
-
-    <div class="status-badge">
-      <div class="status-row">
+    <div class="nav-center">
+      <button class="nav-btn active" onclick="showPage('home')"><span class="nav-icon">🏠</span> Главная</button>
+      <button class="nav-btn" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Настройки</button>
+    </div>
+    <div class="nav-right">
+      <div class="status-badge">
         <div class="dot red" id="s-dot"></div>
         <div class="status-label" id="s-label">Загрузка...</div>
       </div>
-      <div class="status-phone" id="s-phone"></div>
     </div>
   </div>
 
@@ -163,42 +155,123 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
 
     <!-- HOME -->
     <div class="page active" id="page-home">
-      <div class="page-header">
-        <div class="page-title">Добро пожаловать 👋</div>
-        <div class="page-sub">Панель управления CustomsAI</div>
-      </div>
-      <div class="stat-grid">
-        <div class="stat-card green"><div class="stat-val" id="h-state">—</div><div class="stat-lbl">Статус WhatsApp</div></div>
-        <div class="stat-card blue"><div class="stat-val" id="h-count">0</div><div class="stat-lbl">Деклараций создано</div></div>
-        <div class="stat-card orange"><div class="stat-val" id="h-kw">—</div><div class="stat-lbl">Кодовое слово</div></div>
-        <div class="stat-card" style="background:rgba(0,150,200,0.1);border-color:rgba(0,150,200,0.2)"><div class="stat-val" id="h-tg" style="color:#0096c8">—</div><div class="stat-lbl">Telegram</div></div>
-      </div>
+      <!-- CONNECTION SECTION -->
       <div class="panel">
-        <div class="panel-title">📋 Быстрый старт</div>
-        <div class="btn-row">
-          <button class="btn btn-green" onclick="showPage('connect')">📱 Подключить WhatsApp</button>
-          <button class="btn btn-blue" onclick="showPage('manual')">✍️ Создать декларацию</button>
-          <button class="btn btn-outline" onclick="showTelegramSetup()">📲 Добавить Telegram</button>
-          <button class="btn btn-outline" onclick="showPage('history')">📁 Посмотреть историю</button>
+        <div class="panel-title">🤖 Подключите боты</div>
+        <div style="font-size:15px;color:var(--txt2);text-align:center;margin-bottom:32px">Выберите платформу для работы с декларациями</div>
+        <div style="display:flex;gap:24px;align-items:stretch">
+          <!-- WhatsApp Connect Button -->
+          <div style="flex:1;position:relative">
+            <div id="whatsapp-connect-card" style="background:linear-gradient(135deg,#25d366 0%,#128c7e 100%);border-radius:20px;padding:32px;box-shadow:0 8px 32px rgba(37,211,102,0.3);border:1px solid rgba(255,255,255,0.1);height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.3s ease">
+              <div style="width:80px;height:80px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="white">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </div>
+              <div id="wa-card-body" style="width:100%;display:flex;flex-direction:column;align-items:center">
+                <div style="font-size:48px;margin-bottom:10px;opacity:0.9">💬</div>
+                <div style="color:rgba(255,255,255,0.7);font-size:13px">Загрузка...</div>
+              </div>
+            </div>
+          </div>
+          <!-- Telegram Button -->
+          <div style="flex:1">
+            <div style="background:linear-gradient(135deg,#0088cc 0%,#0066aa 100%);border-radius:20px;padding:32px;box-shadow:0 8px 32px rgba(0,136,204,0.3);border:1px solid rgba(255,255,255,0.1);height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="width:80px;height:80px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0 .05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .36z"/>
+                </svg>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;padding:8px;background:rgba(255,255,255,0.15);border-radius:8px;width:100%">
+                <div class="dot" style="background:#4ade80;width:8px;height:8px;margin:0"></div>
+                <div style="color:white;font-size:13px">Онлайн и готов помочь</div>
+              </div>
+              <div style="display:flex;justify-content:center">
+                <a href="https://t.me/customskzbot" target="_blank" style="display:block;background:white;color:#0088cc;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;text-align:center;transition:all 0.3s ease;width:100%;max-width:280px" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                  💬 Попробовать в Telegram
+                </a>
+              </div>
+            </div>
+          </div>
+>>>>>>> e1a7a20:index.html
         </div>
       </div>
+
+      <!-- KEYWORD SECTION -->
+      <div class="panel">
+        <div class="panel-title">🔑 Кодовое слово</div>
+        <div style="padding:32px;background:linear-gradient(135deg,rgba(52,199,89,0.1) 0%,rgba(0,136,204,0.1) 100%);border-radius:20px;border:1px solid rgba(52,199,89,0.2);text-align:center">
+          <div style="font-size:48px;font-weight:700;color:var(--accent);letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.1)" id="main-keyword">—</div>
+          <div style="font-size:15px;color:var(--txt2);margin-top:12px">Напишите это слово в WhatsApp или Telegram для создания декларации</div>
+        </div>
+      </div>
+
+      <!-- WHATSAPP QR MODAL -->
+      <div id="whatsapp-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;backdrop-filter:blur(10px);opacity:0;transition:opacity 0.4s ease">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:40px">
+          <div id="whatsapp-modal-content" style="background:white;border-radius:28px;padding:48px;box-shadow:0 30px 100px rgba(0,0,0,0.4);border:1px solid rgba(0,0,0,0.08);max-width:700px;width:100%;transform:scale(0.6) translateY(80px);opacity:0;transition:all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)">
+            <div style="text-align:center;margin-bottom:28px">
+              <div style="width:90px;height:90px;background:linear-gradient(135deg,#25d366 0%,#128c7e 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 8px 24px rgba(37,211,102,0.3)">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </div>
+              <div style="color:#1d1d1d;font-size:26px;font-weight:700;margin-bottom:8px">Подключение WhatsApp</div>
+              <div style="color:#6e6e73;font-size:15px">Отсканируйте QR-код в приложении WhatsApp</div>
+            </div>
+            <div id="whatsapp-qr-box" style="background:#f5f5f7;border-radius:20px;padding:28px;margin-bottom:28px;box-shadow:inset 0 2px 8px rgba(0,0,0,0.06)">
+              <div id="connect-body" style="text-align:center">Загрузка QR-кода...</div>
+            </div>
+            <div style="color:#6e6e73;font-size:14px;line-height:1.9;text-align:center;margin-bottom:28px">
+              <div style="margin-bottom:6px;font-weight:500;color:#1d1d1d">Как подключить:</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#34C759;color:white;border-radius:50%;font-size:12px;font-weight:600">1</span> Откройте WhatsApp на телефоне</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#34C759;color:white;border-radius:50%;font-size:12px;font-weight:600">2</span> Настройки → Связанные устройства</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#34C759;color:white;border-radius:50%;font-size:12px;font-weight:600">3</span> Нажмите "Привязать устройство"</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#34C759;color:white;border-radius:50%;font-size:12px;font-weight:600">4</span> Наведите камеру на QR-код выше</div>
+            </div>
+            <button onclick="closeWhatsAppQR()" style="display:block;width:100%;background:#f5f5f7;color:#1d1d1d;border:1px solid #e5e5ea;padding:16px 28px;border-radius:14px;font-weight:600;text-align:center;transition:all 0.3s ease;cursor:pointer;font-size:16px" onmouseover="this.style.background='#e5e5ea'" onmouseout="this.style.background='#f5f5f7'">
+              ✕ Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOW TO USE -->
+      <div class="panel">
+        <div class="panel-title">📚 Как это работает</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+          <div style="text-align:center">
+            <div style="font-size:28px;margin-bottom:12px">1️⃣</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px">Подключение</div>
+            <div style="font-size:14px;color:var(--txt2);line-height:1.6">Сканируйте QR-код ниже чтобы подключить WhatsApp номер</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;margin-bottom:12px">2️⃣</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px">Сбор данных</div>
+            <div style="font-size:14px;color:var(--txt2);line-height:1.6">Менеджер общается с клиентом в WhatsApp и собирает информацию</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;margin-bottom:12px">3️⃣</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px">Команда</div>
+            <div style="font-size:14px;color:var(--txt2);line-height:1.6">Когда готово — напишите кодовое слово: <strong style="color:var(--accent)" id="h-kw2">—</strong></div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;margin-bottom:12px">4️⃣</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px">Результат</div>
+            <div style="font-size:14px;color:var(--txt2);line-height:1.6">Бот создаст PDF декларацию и отправит клиенту</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTEXT MEMORY -->
       <div class="panel">
         <div class="panel-title">🧠 Память контекста</div>
-        <div style="font-size:13px;color:var(--txt2)">ИИ анализирует <strong style="color:var(--txt)">последние 40 сообщений</strong> из чата. Более старые сообщения не видны.</div>
+        <div style="font-size:14px;color:var(--txt2);text-align:center">ИИ анализирует <strong style="color:var(--txt)">последние 40 сообщений</strong> из чата. Более старые сообщения не видны.</div>
         <div class="mem-bar"><div class="mem-fill"></div></div>
         <div class="mem-labels"><span>0</span><span>40 сообщений</span></div>
       </div>
-      <div class="panel">
-        <div class="panel-title">📖 Как это работает</div>
-        <div style="font-size:13px;color:var(--txt2);line-height:2">
-          1. Менеджер общается с клиентом в WhatsApp и собирает все данные<br>
-          2. Когда данные готовы — пишет кодовое слово <strong style="color:var(--green)" id="h-kw2">декларация 777</strong><br>
-          3. Бот автоматически читает переписку и создаёт PDF декларацию<br>
-          4. PDF отправляется клиенту прямо в WhatsApp
-        </div>
-      </div>
-    </div>
 
+<<<<<<< HEAD:panel.html
     <!-- CONNECT -->
     <div class="page" id="page-connect">
       <div class="page-header">
@@ -365,29 +438,33 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
           Дополнительная проверка: <a href="https://keden.kz/tnved" target="_blank" style="color:var(--ac)">keden.kz</a> · <a href="https://tnved.bi.kz" target="_blank" style="color:var(--ac)">tnved.bi.kz</a>
         </div>
       </div>
+=======
+>>>>>>> e1a7a20:index.html
     </div>
 
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-header">
-        <div class="page-title">Настройки</div>
+        <div class="page-title">⚙️ Настройки</div>
         <div class="page-sub">Управление параметрами бота</div>
       </div>
-      <div class="panel">
-        <div class="panel-title">🔑 Кодовое слово</div>
-        <div style="font-size:13px;color:var(--txt2);margin-bottom:16px">Менеджер пишет это слово в чате → бот создаёт декларацию автоматически</div>
-        <div class="grid-2">
-          <div class="field"><label>Новое кодовое слово</label><input id="kw-input" placeholder="декларация 777"></div>
-          <div style="display:flex;align-items:flex-end"><button class="btn btn-green" onclick="saveKw()" style="width:100%">💾 Сохранить</button></div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- KEYWORD CARD -->
+        <div class="panel" style="background:linear-gradient(135deg,rgba(52,199,89,0.05) 0%,rgba(52,199,89,0.02) 100%)">
+          <div class="panel-title">🔑 Кодовое слово</div>
+          <div style="font-size:14px;color:var(--txt2);margin-bottom:20px">Слово для запуска создания декларации</div>
+          <div class="field"><label>Новое кодовое слово</label><input id="kw-input" placeholder="Введите кодовое слово"></div>
+          <button class="btn btn-green" onclick="saveKw()" style="width:100%;margin-top:16px">💾 Сохранить</button>
+          <div id="kw-msg" style="margin-top:12px;font-size:13px"></div>
         </div>
-        <div id="kw-msg" style="margin-top:8px;font-size:13px"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">🧠 Память контекста</div>
-        <div style="font-size:13px;color:var(--txt2);margin-bottom:16px">Сколько последних сообщений из чата читает система при создании декларации</div>
-        <div class="grid-2">
+        
+        <!-- CONTEXT MEMORY CARD -->
+        <div class="panel" style="background:linear-gradient(135deg,rgba(0,150,200,0.05) 0%,rgba(0,150,200,0.02) 100%)">
+          <div class="panel-title">🧠 Память контекста</div>
+          <div style="font-size:14px;color:var(--txt2);margin-bottom:20px">Количество сообщений для анализа</div>
           <div class="field">
-            <label>Количество сообщений</label>
+            <label>Лимит сообщений</label>
             <select id="limit-select" onchange="saveLimit()">
               <option value="20">20 сообщений — быстро</option>
               <option value="40" selected>40 сообщений — рекомендуется</option>
@@ -395,16 +472,14 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
               <option value="100">100 сообщений — максимум</option>
             </select>
           </div>
-          <div style="display:flex;align-items:flex-end">
-            <div id="limit-msg" style="font-size:13px;padding-bottom:4px"></div>
-          </div>
-        </div>
-        <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;font-size:13px;color:var(--txt2)">
-          💡 Больше сообщений = точнее данные, но медленнее обработка. 40 — оптимально для большинства чатов.
+          <div id="limit-msg" style="margin-top:12px;font-size:13px"></div>
         </div>
       </div>
-      <div class="panel">
+      
+      <!-- WHATSAPP CARD -->
+      <div class="panel" style="background:linear-gradient(135deg,rgba(37,211,102,0.05) 0%,rgba(37,211,102,0.02) 100%)">
         <div class="panel-title">🔌 WhatsApp</div>
+        <div style="font-size:14px;color:var(--txt2);margin-bottom:20px">Управление подключением WhatsApp</div>
         <button class="btn btn-danger" onclick="disconnectWA()">Отключить и сменить номер</button>
       </div>
       <div class="panel">
@@ -442,25 +517,25 @@ function showPage(name) {
   var pg = document.getElementById('page-'+name);
   if (pg) pg.classList.add('active');
   var btns = document.querySelectorAll('.nav-btn');
-  var map = {home:0,connect:1,manual:2,tnved:3,history:4,settings:5};
+  var map = {home:0,settings:1};
   if (map[name]!==undefined) btns[map[name]].classList.add('active');
-  if (name==='connect') renderConnect();
-  if (name==='history') loadHistory();
-  if (name==='tnved') { document.getElementById('tnved-result') && (document.getElementById('tnved-result').style.display='none'); }
+  if (name==='home') renderConnect();
   if (name==='settings') loadSettings();
 }
 
 // STATUS
 function loadStatus() {
-  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+  console.log('🔄 loadStatus called');
+  fetch('/status?t=' + Date.now()).then(function(r){return r.json()}).then(function(d) {
+    console.log('📊 Status data:', d);
     var dot = document.getElementById('s-dot');
     var lbl = document.getElementById('s-label');
     var phone = document.getElementById('s-phone');
     var map = {disconnected:['red','Отключён'],qr:['orange','Ожидает QR'],connected:['green','Подключён']};
     var st = map[d.state]||['red','Неизвестно'];
-    dot.className = 'dot ' + st[0];
-    lbl.textContent = st[1];
-    phone.textContent = d.phone || '';
+    if (dot) dot.className = 'dot ' + st[0];
+    if (lbl) lbl.textContent = st[1];
+    if (phone) phone.textContent = d.phone || '';
 
     var hState = document.getElementById('h-state');
     var hCount = document.getElementById('h-count');
@@ -471,6 +546,21 @@ function loadStatus() {
     if (hCount) hCount.textContent = d.stats || 0;
     if (hKw) hKw.textContent = d.keyword || '—';
     if (hKw2) hKw2.textContent = d.keyword || '—';
+    
+    // Update main keyword display
+    var mainKw = document.getElementById('main-keyword');
+    console.log('🔍 main-keyword element:', mainKw);
+    console.log('🔑 keyword value:', d.keyword);
+    if (mainKw) {
+      mainKw.textContent = d.keyword || '—';
+      console.log('✅ Updated main-keyword to:', d.keyword);
+    } else {
+      console.log('❌ main-keyword element not found');
+    }
+    
+    // Update settings input field with current keyword only if not focused
+    var kwInput = document.getElementById('kw-input');
+    if (kwInput && d.keyword && document.activeElement !== kwInput) kwInput.value = d.keyword;
     
     if (hTg) {
       if (d.telegram_enabled && d.telegram_connected) {
@@ -484,42 +574,146 @@ function loadStatus() {
         hTg.style.color = '#666';
       }
     }
-  }).catch(function(){});
-}
-setInterval(loadStatus, 3000);
-loadStatus();
-
-// CONNECT
-function renderConnect() {
-  var box = document.getElementById('connect-body');
-  var phoneSection = document.getElementById('phone-link-section');
-  fetch('/status').then(function(r){return r.json()}).then(function(d) {
-    if (d.state === 'connected') {
-      phoneSection.style.display = 'none';
-      box.innerHTML = '<div class="connected-box"><div class="connected-icon">✅</div><div><div class="connected-num">+' + (d.phone||'') + '</div><div class="connected-sub">WhatsApp подключён и работает</div></div></div>' +
-        '<div class="panel"><div class="panel-title">Текущий статус</div><p style="font-size:13px;color:var(--txt2);margin-bottom:16px">Бот активен. Кодовое слово: <strong style="color:var(--green)">' + d.keyword + '</strong></p>' +
-        '<button class="btn btn-danger" onclick="disconnectWA()">🔌 Отключить и сменить номер</button></div>';
-    } else if (d.state === 'qr') {
-      phoneSection.style.display = 'block';
-      box.innerHTML = '<div class="panel"><div class="qr-center">' +
-        '<div class="qr-frame"><img src="/qr.png?t=' + Date.now() + '" alt="QR"></div>' +
-        '<div class="steps">' +
-        '<div><span class="step-num">1</span>Откройте <strong>WhatsApp</strong> на телефоне</div>' +
-        '<div><span class="step-num">2</span>Нажмите ⋮ → <strong>Связанные устройства</strong></div>' +
-        '<div><span class="step-num">3</span>Нажмите <strong>Привязать устройство</strong></div>' +
-        '<div><span class="step-num">4</span>Наведите камеру на QR-код</div>' +
-        '</div></div>' +
-        '<div style="text-align:center;margin-top:16px">' +
-        '<button class="btn btn-outline" onclick="togglePhoneForm()">📱 Или введите номер телефона</button>' +
-        '</div></div>';
-      setTimeout(renderConnect, 3000);
-    } else {
-      phoneSection.style.display = 'none';
-      box.innerHTML = '<div class="panel" style="text-align:center;padding:40px;color:var(--txt2)">⏳ Запускается...<br><br><small>Обновите страницу через несколько секунд</small></div>';
-      setTimeout(renderConnect, 2000);
+    
+    // Update WhatsApp card on home screen
+    var waBody = document.getElementById('wa-card-body');
+    if (waBody) {
+      if (d.state === 'connected') {
+        waBody.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;padding:8px;background:rgba(255,255,255,0.15);border-radius:8px;width:100%">' +
+            '<div class="dot" style="background:#4ade80;width:8px;height:8px;margin:0"></div>' +
+            '<div style="color:white;font-size:13px">Онлайн и готов помочь</div>' +
+          '</div>' +
+          '<a href="#" onclick="disconnectWA();return false" style="display:block;background:white;color:#128c7e;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;text-align:center;transition:all 0.3s ease;cursor:pointer;width:100%;max-width:280px" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.2)\'" onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">✅ Подключено</a>';
+      } else {
+        // Both 'qr' and 'disconnected' states show connect button
+        waBody.innerHTML =
+          '<div style="font-size:36px;margin-bottom:16px">📵</div>' +
+          '<div style="color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:20px">Не подключено</div>' +
+          '<button onclick="showWhatsAppQR()" style="display:block;background:white;color:#128c7e;border:none;padding:12px 24px;border-radius:10px;font-weight:600;font-size:15px;text-align:center;cursor:pointer;transition:all 0.3s ease;width:100%;max-width:280px" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.2)\'" onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">🔗 Подключить</button>';
+      }
     }
+
+    // Update home page Telegram status
+    var tgDot = document.getElementById('tg-status-dot');
+    var tgLbl = document.getElementById('tg-status-label');
+    if (tgDot && tgLbl) {
+      if (d.telegram_enabled && d.telegram_connected) {
+        tgDot.className = 'dot green';
+        tgLbl.textContent = 'Подключен';
+      } else if (d.telegram_enabled) {
+        tgDot.className = 'dot orange';
+        tgLbl.textContent = 'Инициализируется';
+      } else {
+        tgDot.className = 'dot red';
+        tgLbl.textContent = 'Отключен';
+      }
+    }
+  }).catch(function(e){
+    console.log('❌ Error in loadStatus:', e);
   });
 }
+setInterval(loadStatus, 3000);
+// Wait for DOM to be fully loaded before first call
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 DOM loaded, calling loadStatus');
+  loadStatus();
+});
+
+// CONNECT
+function showWhatsAppQR() {
+  var modal = document.getElementById('whatsapp-modal');
+  var content = document.getElementById('whatsapp-modal-content');
+  
+  // Show modal
+  modal.style.display = 'block';
+  
+  // Start rendering QR
+  renderConnect();
+  
+  // Trigger animation after small delay
+  setTimeout(function() {
+    modal.style.opacity = '1';
+    content.style.transform = 'scale(1) translateY(0)';
+    content.style.opacity = '1';
+  }, 50);
+}
+
+function closeWhatsAppQR() {
+  var modal = document.getElementById('whatsapp-modal');
+  var content = document.getElementById('whatsapp-modal-content');
+  
+  // Animate out
+  modal.style.opacity = '0';
+  content.style.transform = 'scale(0.7) translateY(50px)';
+  content.style.opacity = '0';
+  
+  // Hide after animation
+  setTimeout(function() {
+    modal.style.display = 'none';
+  }, 400);
+}
+
+function renderConnect() {
+  var box = document.getElementById('connect-body');
+  if (!box) {
+    console.log('❌ connect-body not found');
+    return;
+  }
+  fetch('/status').then(function(r){return r.json();}).then(function(d) {
+    console.log('📊 Status:', d.state, 'hasQR:', d.hasQR);
+    if (d.state === 'connected') {
+      box.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:18px;font-weight:600;color:#128c7e;margin-bottom:4px">WhatsApp подключён!</div><div style="font-size:14px;color:#666">Номер: +' + (d.phone||'') + '</div></div>';
+    } else if (d.state === 'qr') {
+      box.innerHTML = '<div style="text-align:center"><div class="qr-frame" style="margin:0 auto;display:inline-block;padding:16px;background:white;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1)"><img src="/qr.png?t=' + Date.now() + '" alt="QR" style="width:320px;height:320px;display:block"></div></div>';
+      setTimeout(renderConnect, 3000);
+    } else {
+      box.innerHTML = '<div style="text-align:center;padding:40px;color:#999">⏳ Запускается...<br><br><small>Обновите страницу через несколько секунд</small></div>';
+      setTimeout(renderConnect, 2000);
+    }
+  }).catch(function(err) {
+    console.log('❌ Error in renderConnect:', err);
+    box.innerHTML = '<div style="text-align:center;padding:40px;color:#ff4757">❌ Ошибка загрузки QR<br><br><small>' + err.message + '</small></div>';
+  });
+}
+
+// Auto-show modal when QR is ready
+setInterval(function() {
+  fetch('/status').then(function(r){return r.json();}).then(function(d) {
+    console.log('🔍 Auto-show check - state:', d.state, 'hasQR:', d.hasQR);
+    if (d.state === 'qr' && d.hasQR) {
+      var modal = document.getElementById('whatsapp-modal');
+      console.log('🔍 Modal found:', !!modal, 'display:', modal ? modal.style.display : 'N/A');
+      if (modal && modal.style.display === 'none') {
+        console.log('🚀 Auto-showing modal');
+        showWhatsAppQR();
+      }
+    }
+  });
+}, 2000);
+
+// Show modal immediately on page load if QR is ready
+document.addEventListener('DOMContentLoaded', function() {
+  fetch('/status').then(function(r){return r.json();}).then(function(d) {
+    console.log('🚀 Page load check - state:', d.state, 'hasQR:', d.hasQR);
+    if (d.state === 'qr' && d.hasQR) {
+      setTimeout(function() {
+        console.log('🚀 Showing modal on page load');
+        showWhatsAppQR();
+      }, 1000);
+    }
+  });
+});
+
+// Initial call - not needed for modal approach
+// renderConnect is called when modal opens
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeWhatsAppQR();
+  }
+});
 
 // MANUAL - switch modes
 function switchToEditor() {
@@ -732,13 +926,67 @@ function loadSettings() {
     if (sel && d.msg_limit) sel.value = d.msg_limit.toString();
   });
 }
+// TELEGRAM
+function loadTelegramStatus() {
+  fetch('/status').then(function(r){return r.json()}).then(function(d) {
+    var dot = document.getElementById('tg-status-dot');
+    var lbl = document.getElementById('tg-status-label');
+    var inp = document.getElementById('telegram-token');
+    if (dot && lbl) {
+      if (d.telegram_connected) {
+        dot.className = 'dot green';
+        lbl.textContent = 'Подключен';
+      } else {
+        dot.className = 'dot red';
+        lbl.textContent = 'Отключен';
+      }
+    }
+    if (inp && d.telegram_token) {
+      inp.value = d.telegram_token || '';
+    }
+  });
+}
+function saveTelegramSettings() {
+  var token = document.getElementById('telegram-token').value.trim();
+  if (!token) {
+    alert('Введите токен бота');
+    return;
+  }
+  fetch('/set-telegram-token', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token})})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if (d.ok) {
+        alert('✅ Токен сохранен');
+        loadTelegramStatus();
+      } else {
+        alert('❌ Ошибка: ' + (d.error || 'Неизвестная ошибка'));
+      }
+    })
+    .catch(function(e){
+      alert('❌ Ошибка: ' + e.message);
+    });
+}
 function saveKw() {
   var kw = document.getElementById('kw-input').value.trim();
   var msg = document.getElementById('kw-msg');
   if (!kw) { msg.innerHTML='<span style="color:var(--red)">Введите слово</span>'; return; }
   fetch('/set-keyword', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:kw})})
     .then(function(r){return r.json()})
-    .then(function(d){ msg.innerHTML = d.ok ? '<span style="color:var(--green)">✅ Сохранено: "'+d.keyword+'"</span>' : '<span style="color:var(--red)">Ошибка</span>'; loadStatus(); });
+    .then(function(d){
+      if (d.ok) {
+        msg.innerHTML = '<span style="color:var(--accent)">✅ Сохранено: «' + d.keyword + '»</span>';
+        // Update all keyword displays on page
+        document.querySelectorAll('[id^="h-kw"]').forEach(function(el){ el.textContent = d.keyword; });
+        // Update main keyword display on home page
+        var mainKw = document.getElementById('main-keyword');
+        if (mainKw) mainKw.textContent = d.keyword;
+        loadStatus();
+        // If on connect page, refresh to show new keyword under QR
+        if (document.getElementById('connect-body')) renderConnect();
+      } else {
+        msg.innerHTML = '<span style="color:var(--red)">Ошибка сохранения</span>';
+      }
+    });
 }
 
 function saveLimit() {
@@ -1285,7 +1533,7 @@ function renderEditForm(data) {
 
     '<div style="display:flex;gap:12px;margin-top:4px">' +
     '<button class="btn btn-primary" onclick="saveEdit(' + JSON.stringify(JSON.stringify(data)) + ')">⬇ Сохранить и скачать PDF</button>' +
-    '<button class="btn btn-secondary" onclick="showPage(\'history\')">&#8592; Назад</button>' +
+    `<button class="btn btn-secondary" onclick="showPage('history')">Назад</button>` +
     '</div>';
 
   // Store data reference
@@ -1506,9 +1754,9 @@ function searchTnved() {
       allBox.style.display = 'block';
       allBox.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:8px;font-weight:500">' + (d.status === 'confirmed' ? 'Результат с keden.kz:' : 'Результаты с keden.kz — нажмите чтобы выбрать:') + '</div>' +
         d.all_results.map(function(r) {
-          return '<div data-code="' + r.code + '" onclick="selectTnvedEl(this)" style="padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor=\'var(--ac)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">' +
-          '<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">' + r.code + '</span>' +
-          '<span style="font-size:12px;color:var(--txt2)">' + r.description.slice(0,200) + '</span></div>';
+          return `<div data-code='${r.code}' onclick='selectTnvedEl(this)' style='padding:10px 14px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;cursor:pointer;transition:border .15s' onmouseover='this.style.borderColor="var(--ac)"' onmouseout='this.style.borderColor="var(--bd)"'>` +
+          `<span style="font-size:14px;font-weight:700;color:var(--ac);margin-right:10px">${r.code}</span>` +
+          `<span style="font-size:12px;color:var(--txt2)">${r.description.slice(0,200)}</span></div>`;
         }).join('');
     } else if (allBox) {
       allBox.style.display = 'none';

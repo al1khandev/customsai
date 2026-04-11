@@ -1,0 +1,28 @@
+{
+  "declarant_name": "ООО ТехноИмпорт",
+  "declarant_inn": "7701234567",
+  "declarant_address": "г. Москва, ул. Деловая, д. 5, офис 100",
+  "exporter_name": "Shenzhen Tech Co., Ltd.",
+  "exporter_country": "CN",
+  "exporter_address": "Building A, Tech Park, Shenzhen, China",
+  "delivery_terms": "CIP",
+  "currency": "USD",
+  "total_invoice_amount": "25000",
+  "invoice_number": "INV-2024-056",
+  "contract_number": "CONTRACT-2024-001",
+  "gross_weight": "25",
+  "goods": [
+    {
+      "name": "Процессоры Intel Core i7-13700",
+      "quantity": "100",
+      "unit": "шт",
+      "total_price": "25000",
+      "tnved": "8542310000",
+      "tnved_description": "AI-определенный код для: Процессоры Intel Core i7-13700",
+      "tnved_source": "cache",
+      "tnved_status": "confirmed",
+      "tnved_reason": "Результат из кэша (проверен ранее)",
+      "tnved_candidates": []
+    }
+  ]
+}

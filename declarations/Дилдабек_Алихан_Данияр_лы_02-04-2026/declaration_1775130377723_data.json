@@ -1,0 +1,28 @@
+{
+  "declarant_name": "Дилдабек Алихан Даниярұлы",
+  "declarant_inn": "090210550017",
+  "declarant_address": "Бакыт 9",
+  "exporter_name": "Nike",
+  "exporter_country": "DE",
+  "exporter_address": "Germany",
+  "delivery_terms": "",
+  "currency": "USD",
+  "total_invoice_amount": "9000",
+  "invoice_number": "",
+  "contract_number": "",
+  "gross_weight": "250",
+  "goods": [
+    {
+      "name": "процессор intel",
+      "quantity": "500",
+      "unit": "штук",
+      "total_price": "600",
+      "tnved": "8542310000",
+      "tnved_description": "AI-определенный код для: процессор intel",
+      "tnved_source": "AI (NVIDIA API)",
+      "tnved_status": "ai_determined",
+      "tnved_reason": "Код определен искусственным интеллектом на основе описания товара",
+      "tnved_candidates": []
+    }
+  ]
+}
