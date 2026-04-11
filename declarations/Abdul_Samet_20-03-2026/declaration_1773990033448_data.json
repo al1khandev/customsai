@@ -1,0 +1,33 @@
+{
+  "declarant_name": "",
+  "declarant_inn": "",
+  "declarant_address": "",
+  "exporter_name": "",
+  "exporter_country": "",
+  "exporter_address": "",
+  "delivery_terms": "",
+  "currency": "",
+  "total_invoice_amount": "",
+  "exchange_rate": "",
+  "transport_type": "",
+  "transport_id": "",
+  "border_crossing": "",
+  "gross_weight": "",
+  "packages_count": "",
+  "invoice_number": "",
+  "invoice_date": "",
+  "contract_number": "",
+  "goods": [
+    {
+      "name": "",
+      "tnved": "8408100000",
+      "origin_country": "",
+      "gross_weight": "",
+      "net_weight": "",
+      "quantity": "",
+      "unit": "",
+      "total_price": "",
+      "customs_procedure": ""
+    }
+  ]
+}

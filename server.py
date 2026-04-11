@@ -13,6 +13,36 @@ ssl_context.verify_mode = ssl.CERT_NONE
 
 class ProxyHandler(SimpleHTTPRequestHandler):
 
+    def _proxy_to_bot(self, method, body=None):
+        """Proxy request to bot server on port 3000"""
+        try:
+            url = f'http://localhost:3000{self.path}'
+            headers = {}
+            if body:
+                headers['Content-Type'] = 'application/json'
+                headers['Content-Length'] = str(len(body))
+            req = urllib.request.Request(url, data=body, method=method, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read()
+                self.send_response(resp.status)
+                for header in ['Content-Type', 'Content-Length']:
+                    if resp.headers.get(header):
+                        self.send_header(header, resp.headers[header])
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(data)
+        except Exception as e:
+            error_msg = json.dumps({'error': str(e)}).encode()
+            self._respond(500, error_msg)
+
+    def do_GET(self):
+        # Proxy API requests to bot server (port 3000)
+        api_paths = ['/status', '/health', '/qr.png', '/parse']
+        if any(self.path == p or self.path.startswith(p) for p in api_paths):
+            self._proxy_to_bot('GET')
+            return
+        super().do_GET()
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -22,6 +52,21 @@ class ProxyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        # API endpoints to proxy to bot server
+        bot_api_paths = ['/set-keyword', '/set-limit', '/set-telegram-token',
+                        '/logout', '/link-phone', '/manual', '/generate', '/parse']
+
+        if self.path in bot_api_paths:
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(length) if length > 0 else None
+                self._proxy_to_bot('POST', body)
+                return
+            except Exception as e:
+                error_msg = json.dumps({'error': str(e)}).encode()
+                self._respond(500, error_msg)
+                return
+
         if self.path == '/api/chat':
             try:
                 length = int(self.headers.get('Content-Length', 0))
@@ -76,6 +121,6 @@ if __name__ == '__main__':
     port = 8080
     server = HTTPServer(('localhost', port), ProxyHandler)
     print(f'✅ Сервер запущен: http://localhost:{port}')
-    print(f'   Открой в браузере: http://localhost:{port}/customs-declaration.html')
+    print(f'   Открой в браузере: http://localhost:{port}/')
     print(f'   Остановить: Ctrl+C')
     server.serve_forever()

@@ -1,0 +1,28 @@
+{
+  "declarant_name": "Дилдабек Алихан Даниярұлы",
+  "declarant_inn": "090210550017",
+  "declarant_address": "Бакыт 9",
+  "exporter_name": "Nike",
+  "exporter_country": "DE",
+  "exporter_address": "Germany",
+  "delivery_terms": "",
+  "currency": "USD",
+  "total_invoice_amount": "600",
+  "invoice_number": "",
+  "contract_number": "",
+  "gross_weight": "250",
+  "goods": [
+    {
+      "name": "процессор intel",
+      "quantity": "500",
+      "unit": "шт",
+      "total_price": "600",
+      "tnved": "",
+      "tnved_description": "",
+      "tnved_source": "all_methods",
+      "tnved_status": "not_found",
+      "tnved_reason": "ТН ВЭД не найден ни на keden.kz, ни через AI. Требуется ручной подбор.",
+      "tnved_candidates": []
+    }
+  ]
+}

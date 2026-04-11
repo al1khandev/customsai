@@ -1,7 +1,65 @@
+# Environment variables
+.env
+
+# Dependencies
 node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# WhatsApp authentication and cache
+.whatsapp-auth/
 .wwebjs_auth/
 .wwebjs_cache/
-declarations/
+whatsapp-auth/
+
+# Data and databases
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
 *.log
-*.pdf
+nohup.out
+server.log
+bot.log
+
+# Temporary files
+tmp/
+*.tmp
+*.tar.gz
+
+# Test files
+test_*.js
+test_*.py
+
+# Backup files
+*.bak
+*.backup
+bot_backup.js
+bot.js.bak
+
+# Sensitive files
+clients.json
 settings.json
+telegram_chat_history.json
+whatsapp_chat_history.json
+
+# Sample files
+sample/
+GETEX_sample.pdf
+*.png
+
+# Build artifacts
+dist/
+build/
+
+# Claude settings
+.claude/

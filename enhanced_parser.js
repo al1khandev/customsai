@@ -117,10 +117,12 @@ function parseEnhancedFormData(text) {
     delivery_terms: '',
     border_crossing: '',
     transport_id: '',
+    document_code: '',
     financial_doc: '',
     gross_weight: '',
     net_weight: '',
     packages_count: '',
+    packaging_type: '',
     goods: []
   };
   
@@ -152,20 +154,21 @@ function parseEnhancedFormData(text) {
   });
   
   console.log('Lines after filtering template fields:', lines.length);
-  
+
   // Check if lines are numbered (e.g., "1. value", "2. value")
   var numberedLines = lines.filter(function(line) {
     return /^\d+[.\)]+\s/.test(line);
   });
-  
+
   // Skip natural language patterns if we have 15+ lines (likely positional format)
   // Also treat 21-line input as positional format (matches form template)
   // But only if NOT already numbered (numbered format should use numbered parser)
+  // CRITICAL: This check must happen BEFORE natural language pattern matching
   if ((lines.length >= 15 || lines.length === 21) && numberedLines.length < 5) {
     console.log('📋 Detected long input (' + lines.length + ' lines), skipping natural language patterns, using positional parsing');
     return parseSimpleListFormat(text, data);
   }
-  
+
   // Natural language patterns
   var naturalPatterns = {
     declarant_name: [
@@ -284,6 +287,7 @@ function parseEnhancedFormData(text) {
   
   // Special logic for simple format recognition
   // Skip natural language pattern extraction if we have 15+ lines (likely positional format)
+  // Note: This check is now done earlier in the function (before natural language patterns)
   if (lines.length < 15) {
     lines.forEach(function(line) {
       var trimmedLine = line.trim();
@@ -439,7 +443,11 @@ function parseEnhancedFormData(text) {
     if (values.length >= 7) data.total_invoice_amount = values[6].replace(/[^\d.]/g, '');
     if (values.length >= 8) data.invoice_number = values[7];
     if (values.length >= 9) data.contract_number = values[8];
-    if (values.length >= 10) data.gross_weight = values[9].replace(/[^\d.]/g, '');
+    if (values.length >= 10) {
+      var parsedGross = values[9].replace(/[^\d.]/g, '');
+      console.log('🔍 [Position 10] Parsed gross_weight: ' + parsedGross);
+      data.gross_weight = parsedGross;
+    }
     if (values.length >= 11) {
       // Goods name - with validation
       var goodName = values[10];
@@ -455,7 +463,7 @@ function parseEnhancedFormData(text) {
         quantity: values.length >= 12 ? values[11].replace(/[^\d.]/g, '') : '1',
         unit: values.length >= 12 && values[11].includes('шт') ? 'шт' : 'шт',
         gross_weight: data.gross_weight || '1',
-        net_weight: values.length >= 16 ? values[15].replace(/[^\d.]/g, '') : '1',
+        net_weight: data.net_weight || '', // Use parsed net_weight only, no fallback to prevent variable confusion
         origin_country: values.length >= 17 ? values[16] : data.exporter_country || 'CN',
         total_price: data.total_invoice_amount || '0'
       });
@@ -463,21 +471,39 @@ function parseEnhancedFormData(text) {
     if (values.length >= 13) data.delivery_terms = values[12].toUpperCase();
     if (values.length >= 14) data.border_crossing = values[13];
     if (values.length >= 15) data.transport_id = values[14];
-    if (values.length >= 16) data.financial_doc = values[15];
-    if (values.length >= 17) {
-      var grossWeightLine = values[16];
+    if (values.length >= 16) data.document_code = values[15];
+    if (values.length >= 17) data.financial_doc = values[16];
+    if (values.length >= 18) {
+      var grossWeightLine = values[17];
       var grossWeightMatch = grossWeightLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
       data.gross_weight = grossWeightMatch ? grossWeightMatch[1].replace(',', '.') : grossWeightLine.replace(/[^\d.]/g, '');
     }
-    if (values.length >= 18) {
-      var netWeightLine = values[17];
-      var netWeightMatch = netWeightLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
-      data.net_weight = netWeightMatch ? netWeightMatch[1].replace(',', '.') : netWeightLine.replace(/[^\d.]/g, '');
-    }
     if (values.length >= 19) {
-      var packagesLine = values[18];
-      var packagesMatch = packagesLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
-      data.packages_count = packagesMatch ? packagesMatch[1].replace(',', '.') : packagesLine.replace(/[^\d.]/g, '');
+      var netWeightLine = values[18];
+      var netWeightMatch = netWeightLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
+      var parsedNet = netWeightMatch ? netWeightMatch[1].replace(',', '.') : netWeightLine.replace(/[^\d.]/g, '');
+      // Validation: only reject if net_weight equals packages_count specifically
+      var parsedNetFloat = parseFloat(parsedNet);
+      var packagesCountFloat = parseFloat(data.packages_count) || 0;
+      if (parsedNetFloat && parsedNetFloat === packagesCountFloat) {
+        console.log('⚠️ [CRITICAL] Parsed net_weight equals packages_count (' + parsedNetFloat + '), rejecting to prevent confusion.');
+        data.net_weight = ''; // Reject if it matches package count
+      } else {
+        data.net_weight = parsedNet;
+        console.log('✅ [Position 19] Parsed net_weight: ' + data.net_weight);
+      }
+    }
+    if (values.length >= 20) {
+      var packagesLine = values[19];
+      var packagesMatch = packagesLine.match(/(\d+)\s*(\w+)/);
+      if (packagesMatch) {
+        data.packages_count = packagesMatch[1]; // digit for Field 6
+        data.packaging_type = packagesMatch[2]; // word for Field 31
+      } else {
+        // fallback: extract number only
+        var packagesNumberMatch = packagesLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
+        data.packages_count = packagesNumberMatch ? packagesNumberMatch[1].replace(',', '.') : packagesLine.replace(/[^\d.]/g, '');
+      }
     }
 
     console.log('✅ Numbered list parsed, fields filled:', Object.keys(data).filter(k => data[k]).length);
@@ -576,12 +602,21 @@ function parseEnhancedFormData(text) {
         else if (fieldName.includes('номер транспорта') || fieldName.includes('контейнера') || fieldName.includes('ттн') || fieldName.includes('container')) {
           data.transport_id = fieldValue;
         }
+        else if (fieldName.includes('код документа') || fieldName.includes('document code') || fieldName.includes('док')) {
+          data.document_code = fieldValue;
+        }
         // Additional fields
         else if (fieldName.includes('таможенный пост') || fieldName.includes('customs post') || fieldName.includes('border crossing')) {
           data.border_crossing = fieldValue;
         }
         else if (fieldName.includes('количество мест') || fieldName.includes('packages') || fieldName.includes('мест')) {
-          data.packages_count = fieldValue;
+          var packagesMatch = fieldValue.match(/(\d+)\s*(\w+)/);
+          if (packagesMatch) {
+            data.packages_count = packagesMatch[1]; // digit for Field 6
+            data.packaging_type = packagesMatch[2]; // word for Field 31
+          } else {
+            data.packages_count = fieldValue.replace(/\D/g, ''); // fallback: extract number only
+          }
         }
         else if (fieldName.includes('общий вес брутто') || fieldName.includes('вес брутто') || fieldName.includes('gross weight')) {
           var weight = fieldValue.replace(/[^\d.,]/g, '').replace(/,/g, '.');
@@ -664,15 +699,9 @@ function parseEnhancedFormData(text) {
     if (goodsList.length > 0) {
       data.goods = goodsList;
     } else if (!data.goods[0]) {
-      data.goods[0] = {
-        name: 'Товар',
-        quantity: '1',
-        unit: 'шт',
-        gross_weight: '1',
-        net_weight: '1',
-        origin_country: data.exporter_country || 'CN',
-        total_price: data.total_invoice_amount || ''
-      };
+      // Don't create "Товар" fallback - fail gracefully
+      console.log('⚠️ [Parser] No goods found in input, not creating fallback item');
+      data.goods = [];
     }
     
     return data;
@@ -784,10 +813,10 @@ function parseSimpleListFormat(text, data) {
     data.transport_id = lines[13];
     console.log('✅ Position 14 (transport_id): ' + data.transport_id);
   }
-  // 15. Financial doc
+  // 15. Document code
   if (lines.length >= 15) {
-    data.financial_doc = lines[14];
-    console.log('✅ Position 15 (financial_doc): ' + data.financial_doc);
+    data.document_code = lines[14];
+    console.log('✅ Position 15 (document_code): ' + data.document_code);
   }
   // 16. Gross weight - FIX: Use word boundary regex to prevent concatenation
   if (lines.length >= 16) {
@@ -811,28 +840,81 @@ function parseSimpleListFormat(text, data) {
     var netWeightMatch = netWeightLine.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
     if (netWeightMatch) {
       var netWeight = netWeightMatch[1].replace(',', '.');
-      data.net_weight = netWeight;
-      if (data.goods[0]) data.goods[0].net_weight = netWeight;
-      console.log('✅ Position 17 (net_weight): ' + netWeight);
+      // Validation: only reject if net_weight equals packages_count specifically
+      var netWeightFloat = parseFloat(netWeight);
+      var packagesCountFloat = parseFloat(data.packages_count) || 0;
+      var grossWeightFloat = parseFloat(data.gross_weight) || 0;
+      
+      // Additional validation: reject if net_weight is suspiciously small compared to gross_weight (likely a quantity value)
+      if (netWeightFloat && netWeightFloat === packagesCountFloat) {
+        console.log('⚠️ [CRITICAL] Parsed net_weight equals packages_count (' + netWeightFloat + '), rejecting to prevent confusion.');
+        data.net_weight = ''; // Reject if it matches package count
+      } else if (netWeightFloat && grossWeightFloat > 1000 && netWeightFloat < 100) {
+        console.log('⚠️ [CRITICAL] Parsed net_weight (' + netWeightFloat + ') is too small compared to gross_weight (' + grossWeightFloat + '), likely a quantity value. Rejecting.');
+        data.net_weight = ''; // Reject if it looks like a quantity
+      } else {
+        data.net_weight = netWeight;
+        if (data.goods[0]) data.goods[0].net_weight = netWeight;
+        console.log('✅ Position 17 (net_weight): ' + netWeight);
+      }
     } else {
       var netWeightFallback = netWeightLine.replace(/[^\d.]/g, '');
-      data.net_weight = netWeightFallback;
-      if (data.goods[0]) data.goods[0].net_weight = netWeightFallback;
-      console.log('✅ Position 17 (net_weight fallback): ' + netWeightFallback);
+      var netWeightFallbackFloat = parseFloat(netWeightFallback);
+      var packagesCountFloat = parseFloat(data.packages_count) || 0;
+      var grossWeightFloat = parseFloat(data.gross_weight) || 0;
+      
+      if (netWeightFallbackFloat && netWeightFallbackFloat === packagesCountFloat) {
+        console.log('⚠️ [CRITICAL] Fallback net_weight equals packages_count (' + netWeightFallbackFloat + '), rejecting to prevent confusion.');
+        data.net_weight = '';
+      } else if (netWeightFallbackFloat && grossWeightFloat > 1000 && netWeightFallbackFloat < 100) {
+        console.log('⚠️ [CRITICAL] Fallback net_weight (' + netWeightFallbackFloat + ') is too small compared to gross_weight (' + grossWeightFloat + '), likely a quantity value. Rejecting.');
+        data.net_weight = '';
+      } else {
+        data.net_weight = netWeightFallback;
+        if (data.goods[0]) data.goods[0].net_weight = netWeightFallback;
+        console.log('✅ Position 17 (net_weight fallback): ' + netWeightFallback);
+      }
     }
   }
   // 18. Packages count - FIX: Extract only first number with word boundary to prevent concatenation
   if (lines.length >= 18) {
     var packages = lines[17];
-    // Extract first number with word boundary to prevent "130.0кг/145.0кг" becoming 130145
-    var packagesMatch = packages.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
+    // Extract digit and packaging type separately
+    var packagesMatch = packages.match(/(\d+)\s*(\w+)/);
     if (packagesMatch) {
-      data.packages_count = packagesMatch[1].replace(',', '.');
-      console.log('✅ [CRITICAL CHECK] Parsed: packages=' + data.packages_count + ' (first number only)');
+      var parsedPackagesCount = parseInt(packagesMatch[1], 10);
+      // Validation: reject if packages_count is suspiciously large (likely a weight value)
+      if (parsedPackagesCount > 1000) {
+        console.log('⚠️ [CRITICAL] Parsed packages_count (' + parsedPackagesCount + ') is too large, likely a weight value. Rejecting.');
+        data.packages_count = ''; // Reject if it looks like a weight
+      } else {
+        data.packages_count = packagesMatch[1]; // digit for Field 6
+        data.packaging_type = packagesMatch[2]; // word for Field 31
+        console.log('✅ [CRITICAL CHECK] Parsed: packages=' + data.packages_count + ', packaging_type=' + data.packaging_type);
+      }
     } else {
-      // Fallback: remove all non-digits
-      data.packages_count = packages.replace(/\D/g, '');
-      console.log('✅ Position 18 (packages_count fallback): ' + data.packages_count);
+      // Fallback: extract first number only
+      var packagesNumberMatch = packages.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\b/);
+      if (packagesNumberMatch) {
+        var parsedPackagesFallback = parseInt(packagesNumberMatch[1].replace(',', '.'), 10);
+        if (parsedPackagesFallback > 1000) {
+          console.log('⚠️ [CRITICAL] Fallback packages_count (' + parsedPackagesFallback + ') is too large, likely a weight value. Rejecting.');
+          data.packages_count = '';
+        } else {
+          data.packages_count = packagesNumberMatch[1].replace(',', '.');
+          console.log('✅ Position 18 (packages_count fallback): ' + data.packages_count);
+        }
+      } else {
+        var cleanPackagesCount = packages.replace(/\D/g, '');
+        var parsedCleanPackages = parseInt(cleanPackagesCount, 10);
+        if (parsedCleanPackages > 1000) {
+          console.log('⚠️ [CRITICAL] Clean packages_count (' + parsedCleanPackages + ') is too large, likely a weight value. Rejecting.');
+          data.packages_count = '';
+        } else {
+          data.packages_count = cleanPackagesCount;
+          console.log('✅ Position 18 (packages_count fallback): ' + data.packages_count);
+        }
+      }
     }
   }
   // 19. Goods name - with intelligent validation
@@ -904,6 +986,20 @@ function parseSimpleListFormat(text, data) {
     if (!data.goods[0].gross_weight) data.goods[0].gross_weight = data.gross_weight || '';
     if (!data.goods[0].net_weight) data.goods[0].net_weight = data.net_weight || '';
     if (!data.goods[0].origin_country) data.goods[0].origin_country = data.exporter_country || 'CN';
+  }
+
+  // STRICT MAPPING: Set IMMUTABLE flags immediately after parsing
+  if (data.gross_weight) {
+    data.IMMUTABLE_GROSS_WEIGHT = data.gross_weight;
+    console.log('✅ [STRICT MAPPING] gross_weight set to IMMUTABLE in parser: ' + data.IMMUTABLE_GROSS_WEIGHT);
+  }
+  if (data.packages_count) {
+    data.IMMUTABLE_PACKAGES_COUNT = data.packages_count;
+    console.log('✅ [STRICT MAPPING] packages_count set to IMMUTABLE in parser: ' + data.IMMUTABLE_PACKAGES_COUNT);
+  }
+  if (data.net_weight) {
+    data.IMMUTABLE_NET_WEIGHT = data.net_weight;
+    console.log('✅ [STRICT MAPPING] net_weight set to IMMUTABLE in parser: ' + data.IMMUTABLE_NET_WEIGHT);
   }
 
   return data;
